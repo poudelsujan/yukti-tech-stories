@@ -37,7 +37,7 @@ const TestimonialCard = ({ testimonial }: TestimonialCardProps) => {
       </div>
       
       <p className="text-gray-700 mb-3 italic">"{testimonial.text}"</p>
-      <p className="text-sm text-emerald-600 font-medium">Verified purchase: {testimonial.product}</p>
+      <p className="text-sm text-green-600 font-medium">Verified purchase: {testimonial.product}</p>
     </div>
   );
 };

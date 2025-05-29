@@ -35,27 +35,27 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-800 via-blue-700 to-emerald-600 text-white py-20">
+      <section className="bg-gradient-to-br from-green-700 via-green-600 to-green-500 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
               Yukti — Making your life 
-              <span className="block text-emerald-300">easier and efficient</span>
+              <span className="block text-green-200">easier and efficient</span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl mb-8 text-green-100 max-w-3xl mx-auto">
               Smart technology solutions designed for modern Nepali homes. 
               Transform your daily routine with our innovative products.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 to="/products"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors inline-flex items-center justify-center"
+                className="bg-white hover:bg-gray-100 text-green-700 px-8 py-4 rounded-lg font-semibold text-lg transition-colors inline-flex items-center justify-center"
               >
                 Shop Now
               </Link>
               <Link 
                 to="/products"
-                className="bg-transparent border-2 border-white hover:bg-white hover:text-blue-800 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all inline-flex items-center justify-center"
+                className="bg-transparent border-2 border-white hover:bg-white hover:text-green-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all inline-flex items-center justify-center"
               >
                 Offers and Deals
               </Link>
@@ -85,7 +85,7 @@ const Home = () => {
           <div className="text-center mt-12">
             <Link 
               to="/products"
-              className="bg-blue-800 hover:bg-blue-900 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
             >
               View All Products
             </Link>
@@ -115,7 +115,7 @@ const Home = () => {
                     key={index}
                     onClick={() => setCurrentTestimonial(index)}
                     className={`w-3 h-3 rounded-full transition-colors ${
-                      index === currentTestimonial ? 'bg-emerald-500' : 'bg-gray-300'
+                      index === currentTestimonial ? 'bg-green-500' : 'bg-gray-300'
                     }`}
                   />
                 ))}
@@ -126,17 +126,17 @@ const Home = () => {
       </section>
 
       {/* Call to Action */}
-      <section className="py-16 bg-gradient-to-r from-blue-800 to-emerald-600 text-white">
+      <section className="py-16 bg-gradient-to-r from-green-700 to-green-500 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Ready to Make Your Home Smart?
           </h2>
-          <p className="text-xl mb-8 text-blue-100">
+          <p className="text-xl mb-8 text-green-100">
             Join thousands of satisfied customers across Nepal
           </p>
           <Link 
             to="/products"
-            className="bg-white text-blue-800 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-colors inline-block"
+            className="bg-white text-green-700 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-colors inline-block"
           >
             Start Shopping
           </Link>
