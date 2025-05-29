@@ -1,0 +1,32 @@
+
+{
+  "testimonials": [
+    {
+      "id": "test001",
+      "name": "Bishnu Prasad Koirala",
+      "location": "Kathmandu",
+      "rating": 5,
+      "text": "Yukti ko smart products le mero ghar completely transform garyo. Quality excellent cha ani price ni reasonable. Highly recommended!",
+      "product": "Smart Power Plug",
+      "image": "/placeholder.svg?height=100&width=100"
+    },
+    {
+      "id": "test002", 
+      "name": "Sita Kumari Thapa",
+      "location": "Pokhara",
+      "rating": 5,
+      "text": "Installation dekhi customer service samma sabai ramro. Mero LED strip 6 months dekhi perfectly working cha.",
+      "product": "Smart LED Strip",
+      "image": "/placeholder.svg?height=100&width=100"
+    },
+    {
+      "id": "test003",
+      "name": "Ramesh Shrestha",
+      "location": "Chitwan",
+      "rating": 5,
+      "text": "Security camera ko quality outstanding cha. Night vision clear cha ani app user-friendly cha. Paisa vasool!",
+      "product": "Smart Security Camera", 
+      "image": "/placeholder.svg?height=100&width=100"
+    }
+  ]
+}

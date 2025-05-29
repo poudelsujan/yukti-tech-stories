@@ -1,0 +1,84 @@
+
+{
+  "yukti001": {
+    "id": "yukti001",
+    "title": "Smart Power Plug",
+    "price": 1499,
+    "originalPrice": 1999,
+    "category": "Home Electronics",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "25% OFF Limited Time",
+    "specs": {
+      "connectivity": "WiFi 2.4GHz",
+      "power": "16A Max Load",
+      "compatibility": "iOS/Android App",
+      "warranty": "1 Year"
+    },
+    "colors": ["White", "Black"],
+    "tags": ["smart home", "energy saving", "remote control"],
+    "stories": [
+      {
+        "title": "Ama's Smart Kitchen Revolution",
+        "location": "Kathmandu, Nepal",
+        "persona": "Sunita Devi, 45",
+        "image": "/placeholder.svg?height=300&width=400",
+        "text": "Sunita ji from Kathmandu installed our smart plug for her rice cooker. Now she starts cooking rice from her office, and it's ready when she reaches home. 'Yukti le mero kitchen lai smart banayo!' she says with a smile."
+      }
+    ]
+  },
+  "yukti002": {
+    "id": "yukti002",
+    "title": "Smart LED Strip",
+    "price": 2299,
+    "originalPrice": 2899,
+    "category": "Lighting",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "Free Installation",
+    "specs": {
+      "length": "5 meters",
+      "colors": "16 million RGB",
+      "control": "App + Voice",
+      "power": "12V DC"
+    },
+    "colors": ["RGB"],
+    "tags": ["ambient lighting", "mood", "smart home"],
+    "stories": [
+      {
+        "title": "Dashain Celebration Made Brighter",
+        "location": "Pokhara, Nepal",
+        "persona": "Rajan Gurung, 28",
+        "image": "/placeholder.svg?height=300&width=400",
+        "text": "During last Dashain, Rajan transformed his home in Pokhara with our smart LED strips. The colorful lights synced with traditional music created an amazing festive atmosphere that impressed all his relatives."
+      }
+    ]
+  },
+  "yukti003": {
+    "id": "yukti003",
+    "title": "Smart Security Camera",
+    "price": 3499,
+    "originalPrice": 4299,
+    "category": "Security",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "Free Cloud Storage 1 Month",
+    "specs": {
+      "resolution": "1080p Full HD",
+      "nightVision": "Up to 30ft",
+      "storage": "Local + Cloud",
+      "connectivity": "WiFi + Ethernet"
+    },
+    "colors": ["White", "Black"],
+    "tags": ["security", "monitoring", "night vision"],
+    "stories": [
+      {
+        "title": "Peace of Mind for Working Parents",
+        "location": "Lalitpur, Nepal",
+        "persona": "Priya & Anil Sharma",
+        "image": "/placeholder.svg?height=300&width=400",
+        "text": "The Sharma family from Lalitpur can now monitor their home and kids while at work. 'Hamro ghar ab hamesha safe cha,' says Priya. The night vision feature gives them complete peace of mind."
+      }
+    ]
+  }
+}
