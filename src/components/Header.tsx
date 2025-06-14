@@ -1,5 +1,5 @@
 
-import { Search, ShoppingCart } from "lucide-react";
+import { Search, ShoppingCart, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Header = () => {
@@ -12,7 +12,7 @@ const Header = () => {
               <span className="text-white font-bold text-lg">Y</span>
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
-              Yukti
+              Yukti Group
             </span>
           </Link>
 
@@ -24,16 +24,22 @@ const Header = () => {
               Home
             </Link>
             <Link 
+              to="/services" 
+              className="text-gray-700 hover:text-green-600 transition-colors font-medium"
+            >
+              Services
+            </Link>
+            <Link 
               to="/products" 
               className="text-gray-700 hover:text-green-600 transition-colors font-medium"
             >
-              Products
+              Shop
             </Link>
             <Link 
-              to="/admin" 
+              to="/contact" 
               className="text-gray-700 hover:text-green-600 transition-colors font-medium"
             >
-              Admin
+              Contact
             </Link>
           </nav>
 
@@ -47,6 +53,15 @@ const Header = () => {
                 0
               </span>
             </div>
+            <a 
+              href="https://wa.me/9779800000000"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              WhatsApp
+            </a>
           </div>
         </div>
       </div>

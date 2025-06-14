@@ -3,30 +3,30 @@
   "testimonials": [
     {
       "id": "test001",
-      "name": "Bishnu Prasad Koirala",
+      "name": "Rajesh Shrestha",
       "location": "Kathmandu",
       "rating": 5,
-      "text": "Yukti ko smart products le mero ghar completely transform garyo. Quality excellent cha ani price ni reasonable. Highly recommended!",
-      "product": "Smart Power Plug",
-      "image": "/placeholder.svg?height=100&width=100"
+      "text": "Yukti Group helped me import electronics from China for my shop. The entire process was smooth and they handled all the customs paperwork. My business has grown 300% since working with them!",
+      "product": "Import Services",
+      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
     },
     {
       "id": "test002", 
       "name": "Sita Kumari Thapa",
       "location": "Pokhara",
       "rating": 5,
-      "text": "Installation dekhi customer service samma sabai ramro. Mero LED strip 6 months dekhi perfectly working cha.",
-      "product": "Smart LED Strip",
-      "image": "/placeholder.svg?height=100&width=100"
+      "text": "Their tech team built an amazing website for my handicraft business. Now I get orders from all over Nepal and even international customers. Yukti Group understands local business needs perfectly.",
+      "product": "Website Development",
+      "image": "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face"
     },
     {
       "id": "test003",
-      "name": "Ramesh Shrestha",
+      "name": "Anil Gurung",
       "location": "Chitwan",
       "rating": 5,
-      "text": "Security camera ko quality outstanding cha. Night vision clear cha ani app user-friendly cha. Paisa vasool!",
-      "product": "Smart Security Camera", 
-      "image": "/placeholder.svg?height=100&width=100"
+      "text": "I was struggling to source quality products for my store. Yukti Group connected me with reliable suppliers and now I have a steady supply chain. Their support team is always available when I need help.",
+      "product": "Product Sourcing", 
+      "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
     }
   ]
 }

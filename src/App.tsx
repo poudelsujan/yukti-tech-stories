@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,8 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Services from "./pages/Services";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -22,8 +23,10 @@ const App = () => (
         <div className="min-h-screen">
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/services" element={<><Header /><Services /></>} />
             <Route path="/products" element={<><Header /><Products /></>} />
             <Route path="/product/:id" element={<><Header /><ProductDetail /></>} />
+            <Route path="/contact" element={<><Header /><Contact /></>} />
             <Route path="/admin" element={<><Header /><Admin /></>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
