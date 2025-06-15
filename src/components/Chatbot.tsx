@@ -80,9 +80,18 @@ const Chatbot = () => {
         <div className="bg-white rounded-lg shadow-2xl border border-gray-200 w-80 h-96 mb-4 flex flex-col">
           {/* Header */}
           <div className="bg-green-600 text-white p-4 rounded-t-lg flex justify-between items-center">
-            <div>
-              <h3 className="font-semibold">Yukti Group Support</h3>
-              <p className="text-sm text-green-100">Ask me anything!</p>
+            <div className="flex items-center space-x-3">
+              <div>
+                <h3 className="font-semibold">Yukti Group Support</h3>
+              </div>
+              <a 
+                href="https://wa.me/9779847052384"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+              >
+                WhatsApp
+              </a>
             </div>
             <button
               onClick={() => setIsOpen(false)}
