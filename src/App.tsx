@@ -15,6 +15,8 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +34,9 @@ const App = () => (
             <Route path="/products" element={<><Header /><Products /><Footer /></>} />
             <Route path="/product/:id" element={<><Header /><ProductDetail /><Footer /></>} />
             <Route path="/contact" element={<><Header /><Contact /><Footer /></>} />
-            <Route path="/admin" element={<><Header /><Admin /><Footer /></>} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Chatbot />

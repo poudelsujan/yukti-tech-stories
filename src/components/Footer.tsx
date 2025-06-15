@@ -78,6 +78,23 @@ const Footer = () => {
                 </div>
               </div>
             </div>
+
+            {/* Legal Section */}
+            <div className="mt-6">
+              <h4 className="text-lg font-semibold mb-4 text-green-400">Legal</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="/terms" className="text-gray-300 hover:text-green-400 transition-colors text-sm">
+                    Terms and Conditions
+                  </a>
+                </li>
+                <li>
+                  <a href="/privacy" className="text-gray-300 hover:text-green-400 transition-colors text-sm">
+                    Privacy Policy
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -111,11 +128,11 @@ const Footer = () => {
             © 2024 Yukti Group. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-gray-400 hover:text-green-400 text-sm transition-colors">
-              Privacy Policy
+            <a href="/terms" className="text-gray-400 hover:text-green-400 text-sm transition-colors">
+              Terms and Conditions
             </a>
-            <a href="#" className="text-gray-400 hover:text-green-400 text-sm transition-colors">
-              Terms of Service
+            <a href="/privacy" className="text-gray-400 hover:text-green-400 text-sm transition-colors">
+              Privacy Policy
             </a>
           </div>
         </div>
