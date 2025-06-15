@@ -162,7 +162,7 @@ const Chatbot = () => {
               <MessageCircle className="w-6 h-6" />
             </button>
           </TooltipTrigger>
-          <ToltipContent side="left">
+          <TooltipContent side="left">
             <p>Chat with Yukti Group Support</p>
           </TooltipContent>
         </Tooltip>
