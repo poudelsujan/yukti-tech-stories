@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
 import { Button } from "./ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 interface ChatMessage {
   id: string;
@@ -27,7 +28,7 @@ const Chatbot = () => {
     'what services do you offer': 'We offer Import Services (helping you import goods from abroad), Tech Solutions (web development, mobile apps, digital marketing), and we also have an online shop with imported products for sale.',
     'how can you help import': 'We handle the entire import process for you - from sourcing products abroad to managing customs paperwork and delivery. Our team has expertise in international trade and can help you find quality products at competitive prices.',
     'what tech services': 'Our tech services include web development, mobile app development, digital marketing, custom software solutions, and e-commerce setup. We help businesses digitize and grow their online presence.',
-    'how to contact': 'You can contact us through our Contact page, WhatsApp at +977 980-0000-000, or email us at info@yuktigroup.com. We\'re available Sun-Fri 9AM-6PM and Saturday 10AM-4PM.',
+    'how to contact': 'You can contact us through our Contact page, WhatsApp at +977 9847052384, or email us at groupyukti@gmail.com or yuktigroup00@gmail.com. We\'re available Sun-Fri 9AM-6PM and Saturday 10AM-4PM.',
     'where are you located': 'We are based in Kathmandu, Nepal. You can find our detailed contact information on our Contact page.',
     'pricing': 'Our pricing varies based on the service and requirements. Please contact us for a free consultation where we can discuss your specific needs and provide a customized quote.',
     'testimonials': 'We have helped many Nepali businesses grow! Check out testimonials from Rajesh Shrestha (electronics import), Sita Kumari Thapa (handicraft website), and Anil Gurung (product sourcing) on our homepage.',
@@ -134,13 +135,20 @@ const Chatbot = () => {
         </div>
       )}
 
-      {/* Floating Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110"
-      >
-        <MessageCircle className="w-6 h-6" />
-      </button>
+      {/* Floating Button with Tooltip */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110"
+          >
+            <MessageCircle className="w-6 h-6" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          <p>Chat with Yukti Group Support</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 };

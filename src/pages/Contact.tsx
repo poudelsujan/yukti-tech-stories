@@ -158,14 +158,15 @@ const Contact = () => {
                     <Phone className="w-5 h-5 text-green-600 mr-3 mt-1 flex-shrink-0" />
                     <div>
                       <p className="font-medium text-gray-900">Phone</p>
-                      <p className="text-gray-600">+977 980-0000-000</p>
+                      <p className="text-gray-600">+977 9847052384</p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <Mail className="w-5 h-5 text-green-600 mr-3 mt-1 flex-shrink-0" />
                     <div>
                       <p className="font-medium text-gray-900">Email</p>
-                      <p className="text-gray-600">info@yuktigroup.com</p>
+                      <p className="text-gray-600">groupyukti@gmail.com</p>
+                      <p className="text-gray-600">yuktigroup00@gmail.com</p>
                     </div>
                   </div>
                   <div className="flex items-start">
@@ -185,7 +186,7 @@ const Contact = () => {
                   Need immediate assistance? Chat with us on WhatsApp for instant support.
                 </p>
                 <a 
-                  href="https://wa.me/9779800000000"
+                  href="https://wa.me/9779847052384"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-white text-green-600 hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center"
