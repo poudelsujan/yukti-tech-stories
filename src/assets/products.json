@@ -80,5 +80,423 @@
         "text": "The Sharma family from Lalitpur can now monitor their home and kids while at work. 'Hamro ghar ab hamesha safe cha,' says Priya. The night vision feature gives them complete peace of mind."
       }
     ]
+  },
+  "yukti004": {
+    "id": "yukti004",
+    "title": "Wireless Bluetooth Speaker",
+    "price": 2599,
+    "originalPrice": 3199,
+    "category": "Audio",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "18% OFF",
+    "specs": {
+      "battery": "12 hours playback",
+      "connectivity": "Bluetooth 5.0",
+      "waterproof": "IPX7 Rating",
+      "power": "20W Output"
+    },
+    "colors": ["Black", "Blue", "Red"],
+    "tags": ["music", "portable", "waterproof"],
+    "stories": []
+  },
+  "yukti005": {
+    "id": "yukti005",
+    "title": "Smart Doorbell Camera",
+    "price": 4299,
+    "originalPrice": 5299,
+    "category": "Security",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "₹1000 OFF",
+    "specs": {
+      "resolution": "2K HD Video",
+      "detection": "Motion & Person",
+      "storage": "Cloud + Local",
+      "battery": "6 months life"
+    },
+    "colors": ["White"],
+    "tags": ["doorbell", "security", "smart home"],
+    "stories": []
+  },
+  "yukti006": {
+    "id": "yukti006",
+    "title": "Gaming Mechanical Keyboard",
+    "price": 3899,
+    "originalPrice": 4799,
+    "category": "Gaming",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "Limited Edition",
+    "specs": {
+      "switches": "Blue Mechanical",
+      "backlight": "RGB LED",
+      "connectivity": "USB-C Wired",
+      "keys": "104 Keys"
+    },
+    "colors": ["Black", "White"],
+    "tags": ["gaming", "mechanical", "rgb"],
+    "stories": []
+  },
+  "yukti007": {
+    "id": "yukti007",
+    "title": "Wireless Charging Pad",
+    "price": 1899,
+    "originalPrice": 2399,
+    "category": "Accessories",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "Fast Charging",
+    "specs": {
+      "power": "15W Fast Charge",
+      "compatibility": "Qi Certified",
+      "design": "Ultra Slim",
+      "safety": "Over-heat Protection"
+    },
+    "colors": ["Black", "White"],
+    "tags": ["wireless", "charging", "qi"],
+    "stories": []
+  },
+  "yukti008": {
+    "id": "yukti008",
+    "title": "Smart Fitness Tracker",
+    "price": 2799,
+    "originalPrice": 3499,
+    "category": "Wearables",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "Health Monitor",
+    "specs": {
+      "display": "1.4 inch AMOLED",
+      "battery": "14 days",
+      "sensors": "Heart Rate + SpO2",
+      "waterproof": "5ATM Rating"
+    },
+    "colors": ["Black", "Pink", "Blue"],
+    "tags": ["fitness", "health", "smartwatch"],
+    "stories": []
+  },
+  "yukti009": {
+    "id": "yukti009",
+    "title": "USB-C Hub Adapter",
+    "price": 1599,
+    "originalPrice": 1999,
+    "category": "Accessories",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "Multi-port",
+    "specs": {
+      "ports": "7-in-1 Hub",
+      "video": "4K HDMI Output",
+      "charging": "100W PD",
+      "data": "USB 3.0 Speed"
+    },
+    "colors": ["Space Gray", "Silver"],
+    "tags": ["hub", "usb-c", "adapter"],
+    "stories": []
+  },
+  "yukti010": {
+    "id": "yukti010",
+    "title": "Smartphone Gimbal Stabilizer",
+    "price": 5499,
+    "originalPrice": 6999,
+    "category": "Photography",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "Pro Creator",
+    "specs": {
+      "stabilization": "3-Axis Gimbal",
+      "battery": "15 hours",
+      "weight": "600g",
+      "compatibility": "All Smartphones"
+    },
+    "colors": ["Black"],
+    "tags": ["gimbal", "video", "stabilizer"],
+    "stories": []
+  },
+  "yukti011": {
+    "id": "yukti011",
+    "title": "Smart Air Purifier",
+    "price": 8999,
+    "originalPrice": 11999,
+    "category": "Home Appliances",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "HEPA Filter",
+    "specs": {
+      "coverage": "400 sq ft",
+      "filter": "True HEPA H13",
+      "control": "App + Voice",
+      "noise": "Ultra Quiet"
+    },
+    "colors": ["White"],
+    "tags": ["air purifier", "hepa", "smart home"],
+    "stories": []
+  },
+  "yukti012": {
+    "id": "yukti012",
+    "title": "Ergonomic Office Chair",
+    "price": 12999,
+    "originalPrice": 15999,
+    "category": "Furniture",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "Lumbar Support",
+    "specs": {
+      "material": "Mesh + Foam",
+      "adjustment": "Height + Tilt",
+      "weight": "Support 120kg",
+      "warranty": "3 Years"
+    },
+    "colors": ["Black", "Gray"],
+    "tags": ["office", "ergonomic", "chair"],
+    "stories": []
+  },
+  "yukti013": {
+    "id": "yukti013",
+    "title": "Portable Power Bank",
+    "price": 2199,
+    "originalPrice": 2799,
+    "category": "Accessories",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "20000mAh",
+    "specs": {
+      "capacity": "20000mAh",
+      "charging": "22.5W Fast",
+      "ports": "3 Output Ports",
+      "display": "LED Indicator"
+    },
+    "colors": ["Black", "White", "Blue"],
+    "tags": ["power bank", "portable", "fast charging"],
+    "stories": []
+  },
+  "yukti014": {
+    "id": "yukti014",
+    "title": "Smart Robot Vacuum",
+    "price": 15999,
+    "originalPrice": 19999,
+    "category": "Home Appliances",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "Auto Mapping",
+    "specs": {
+      "suction": "2700Pa Strong",
+      "battery": "150 min runtime",
+      "mapping": "LiDAR Navigation",
+      "control": "App + Voice"
+    },
+    "colors": ["Black"],
+    "tags": ["robot vacuum", "smart", "mapping"],
+    "stories": []
+  },
+  "yukti015": {
+    "id": "yukti015",
+    "title": "4K Webcam",
+    "price": 3299,
+    "originalPrice": 4199,
+    "category": "Technology",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "Ultra HD",
+    "specs": {
+      "resolution": "4K @ 30fps",
+      "microphone": "Dual Stereo",
+      "autofocus": "AI Enhanced",
+      "compatibility": "Plug & Play"
+    },
+    "colors": ["Black"],
+    "tags": ["webcam", "4k", "streaming"],
+    "stories": []
+  },
+  "yukti016": {
+    "id": "yukti016",
+    "title": "Smart Light Bulb Set",
+    "price": 1799,
+    "originalPrice": 2299,
+    "category": "Lighting",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "4-Pack Deal",
+    "specs": {
+      "brightness": "800 Lumens",
+      "colors": "16M Colors",
+      "control": "WiFi + Voice",
+      "lifetime": "25000 Hours"
+    },
+    "colors": ["Multi-color"],
+    "tags": ["smart bulb", "wifi", "color changing"],
+    "stories": []
+  },
+  "yukti017": {
+    "id": "yukti017",
+    "title": "Gaming Mouse Pad",
+    "price": 899,
+    "originalPrice": 1199,
+    "category": "Gaming",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "XL Size",
+    "specs": {
+      "size": "900x400x3mm",
+      "surface": "Micro-texture",
+      "base": "Anti-slip Rubber",
+      "edges": "Stitched Border"
+    },
+    "colors": ["Black", "Blue", "Red"],
+    "tags": ["mouse pad", "gaming", "xl"],
+    "stories": []
+  },
+  "yukti018": {
+    "id": "yukti018",
+    "title": "Bluetooth Earbuds",
+    "price": 1999,
+    "originalPrice": 2599,
+    "category": "Audio",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "True Wireless",
+    "specs": {
+      "battery": "6+24 hours",
+      "connection": "Bluetooth 5.0",
+      "charging": "USB-C Case",
+      "water": "IPX4 Rating"
+    },
+    "colors": ["Black", "White"],
+    "tags": ["earbuds", "wireless", "bluetooth"],
+    "stories": []
+  },
+  "yukti019": {
+    "id": "yukti019",
+    "title": "Laptop Cooling Pad",
+    "price": 1299,
+    "originalPrice": 1699,
+    "category": "Accessories",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "6 Fans",
+    "specs": {
+      "fans": "6 Quiet Fans",
+      "size": "Up to 17 inch",
+      "ports": "2 USB Ports",
+      "adjustment": "Height Adjustable"
+    },
+    "colors": ["Black"],
+    "tags": ["cooling pad", "laptop", "fans"],
+    "stories": []
+  },
+  "yukti020": {
+    "id": "yukti020",
+    "title": "Smart Smoke Detector",
+    "price": 2499,
+    "originalPrice": 3199,
+    "category": "Security",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "WiFi Alert",
+    "specs": {
+      "detection": "Smoke + CO",
+      "battery": "10 Year Life",
+      "alerts": "Phone Notifications",
+      "installation": "Easy Mount"
+    },
+    "colors": ["White"],
+    "tags": ["smoke detector", "smart", "safety"],
+    "stories": []
+  },
+  "yukti021": {
+    "id": "yukti021",
+    "title": "Wireless Gaming Headset",
+    "price": 4599,
+    "originalPrice": 5799,
+    "category": "Gaming",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "7.1 Surround",
+    "specs": {
+      "audio": "7.1 Surround Sound",
+      "battery": "30 hours",
+      "microphone": "Noise Canceling",
+      "connection": "2.4GHz Wireless"
+    },
+    "colors": ["Black", "White"],
+    "tags": ["gaming headset", "wireless", "surround"],
+    "stories": []
+  },
+  "yukti022": {
+    "id": "yukti022",
+    "title": "Phone Car Mount",
+    "price": 699,
+    "originalPrice": 999,
+    "category": "Accessories",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "Magnetic Hold",
+    "specs": {
+      "mount": "Dashboard + Vent",
+      "rotation": "360 Degree",
+      "grip": "Magnetic Strong",
+      "compatibility": "All Phones"
+    },
+    "colors": ["Black"],
+    "tags": ["car mount", "magnetic", "phone"],
+    "stories": []
+  },
+  "yukti023": {
+    "id": "yukti023",
+    "title": "Smart Thermostat",
+    "price": 6999,
+    "originalPrice": 8999,
+    "category": "Home Electronics",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "Energy Saving",
+    "specs": {
+      "display": "3.5 inch Color",
+      "control": "WiFi + App",
+      "compatibility": "Most HVAC",
+      "sensors": "Room + Remote"
+    },
+    "colors": ["White", "Black"],
+    "tags": ["thermostat", "smart", "energy"],
+    "stories": []
+  },
+  "yukti024": {
+    "id": "yukti024",
+    "title": "Portable Monitor",
+    "price": 8499,
+    "originalPrice": 10999,
+    "category": "Technology",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": false,
+    "offer": "15.6 inch",
+    "specs": {
+      "size": "15.6 inch IPS",
+      "resolution": "1920x1080 FHD",
+      "connection": "USB-C + HDMI",
+      "weight": "1.8 lbs"
+    },
+    "colors": ["Black"],
+    "tags": ["portable monitor", "usb-c", "ips"],
+    "stories": []
+  },
+  "yukti025": {
+    "id": "yukti025",
+    "title": "Smart Water Bottle",
+    "price": 2899,
+    "originalPrice": 3699,
+    "category": "Health",
+    "image": "/placeholder.svg?height=400&width=400",
+    "trending": true,
+    "offer": "Hydration Track",
+    "specs": {
+      "capacity": "500ml Steel",
+      "tracking": "App Connected",
+      "temperature": "Keep Cold 24h",
+      "reminder": "LED + Vibration"
+    },
+    "colors": ["Blue", "Pink", "Black"],
+    "tags": ["water bottle", "smart", "tracking"],
+    "stories": []
   }
 }

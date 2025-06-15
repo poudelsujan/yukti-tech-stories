@@ -88,7 +88,7 @@ const Chatbot = () => {
                 href="https://wa.me/9779847052384"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-green-700 hover:bg-green-800 text-white p-2 rounded-full transition-colors shadow-sm"
+                className="bg-green-700 hover:bg-green-800 text-white p-2 rounded-full transition-colors shadow-sm flex items-center justify-center"
                 title="Contact us on WhatsApp"
               >
                 <svg 
