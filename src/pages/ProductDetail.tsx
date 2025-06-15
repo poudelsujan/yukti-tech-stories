@@ -29,7 +29,7 @@ const ProductDetail = () => {
     );
   }
 
-  const currentStoryData = product.stories[currentStory];
+  const currentStoryData = product.stories.length > 0 ? product.stories[currentStory] : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -118,53 +118,55 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Customer Story Section */}
-          <div className="border-t border-gray-100 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Customer Stories</h2>
-            
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-gradient-to-r from-blue-50 to-emerald-50 rounded-lg p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    <img 
-                      src={currentStoryData.image} 
-                      alt={currentStoryData.title}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {currentStoryData.title}
-                    </h3>
-                    <p className="text-emerald-600 font-medium mb-1">
-                      {currentStoryData.persona}
-                    </p>
-                    <p className="text-gray-500 text-sm mb-4">
-                      📍 {currentStoryData.location}
-                    </p>
-                    <p className="text-gray-700 leading-relaxed">
-                      {currentStoryData.text}
-                    </p>
-                  </div>
-                </div>
-              </div>
+          {/* Customer Story Section - Only show if stories exist */}
+          {product.stories.length > 0 && currentStoryData && (
+            <div className="border-t border-gray-100 p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Customer Stories</h2>
               
-              {product.stories.length > 1 && (
-                <div className="flex justify-center mt-6 space-x-2">
-                  {product.stories.map((_: any, index: number) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentStory(index)}
-                      className={`w-3 h-3 rounded-full transition-colors ${
-                        index === currentStory ? 'bg-emerald-500' : 'bg-gray-300'
-                      }`}
-                    />
-                  ))}
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-gradient-to-r from-blue-50 to-emerald-50 rounded-lg p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <img 
+                        src={currentStoryData.image} 
+                        alt={currentStoryData.title}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        {currentStoryData.title}
+                      </h3>
+                      <p className="text-emerald-600 font-medium mb-1">
+                        {currentStoryData.persona}
+                      </p>
+                      <p className="text-gray-500 text-sm mb-4">
+                        📍 {currentStoryData.location}
+                      </p>
+                      <p className="text-gray-700 leading-relaxed">
+                        {currentStoryData.text}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              )}
+                
+                {product.stories.length > 1 && (
+                  <div className="flex justify-center mt-6 space-x-2">
+                    {product.stories.map((_: any, index: number) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentStory(index)}
+                        className={`w-3 h-3 rounded-full transition-colors ${
+                          index === currentStory ? 'bg-emerald-500' : 'bg-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
