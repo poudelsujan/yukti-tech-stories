@@ -1,5 +1,5 @@
 
-import { Search, ShoppingCart, MessageCircle } from "lucide-react";
+import { Search, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Header = () => {
@@ -53,15 +53,6 @@ const Header = () => {
                 0
               </span>
             </div>
-            <a 
-              href="https://wa.me/9779800000000"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              WhatsApp
-            </a>
           </div>
         </div>
       </div>
