@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MapPin, Phone, Mail, MessageCircle, Send, Clock } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -151,7 +150,7 @@ const Contact = () => {
                     <MapPin className="w-5 h-5 text-green-600 mr-3 mt-1 flex-shrink-0" />
                     <div>
                       <p className="font-medium text-gray-900">Address</p>
-                      <p className="text-gray-600">Kathmandu, Nepal</p>
+                      <p className="text-gray-600">Balkot, Bhaktapur, Nepal</p>
                     </div>
                   </div>
                   <div className="flex items-start">

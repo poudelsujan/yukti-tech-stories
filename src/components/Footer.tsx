@@ -15,13 +15,13 @@ const Footer = () => {
               in the digital age.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-green-400 transition-colors">
+              <a href="https://www.facebook.com/share/161HhbUETu/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-green-400 transition-colors">
                 <Facebook className="w-6 h-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-green-400 transition-colors">
+              <a href="https://www.instagram.com/yukti_group00" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-green-400 transition-colors">
                 <Instagram className="w-6 h-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-green-400 transition-colors">
+              <a href="https://www.linkedin.com/in/yukti-group-nepal/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-green-400 transition-colors">
                 <Linkedin className="w-6 h-6" />
               </a>
             </div>
@@ -61,7 +61,7 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-green-400 mt-1 flex-shrink-0" />
                 <span className="text-gray-300 text-sm">
-                  Kathmandu, Nepal
+                  Balkot, Bhaktapur, Nepal
                 </span>
               </div>
               <div className="flex items-start space-x-3">
