@@ -11,6 +11,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -66,8 +67,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } else {
         toast({
-          title: "Sign Up Successful",
-          description: "Please check your email to verify your account."
+          title: "Account Created Successfully",
+          description: "Please check your email to verify your account before signing in."
         });
       }
 
@@ -94,6 +95,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           variant: "destructive",
           title: "Sign In Error",
           description: error.message
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully signed in."
         });
       }
 
@@ -136,6 +142,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Password Reset Error",
+          description: error.message
+        });
+      } else {
+        toast({
+          title: "Password Reset Email Sent",
+          description: "Please check your email for password reset instructions."
+        });
+      }
+
+      return { error };
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Password Reset Error",
+        description: error.message
+      });
+      return { error };
+    }
+  };
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -160,6 +196,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signUp,
       signIn,
       signInWithGoogle,
+      resetPassword,
       signOut
     }}>
       {children}
