@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Users, UserCheck, Shield, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { User } from '@supabase/supabase-js';
 
 interface UserProfile {
   id: string;
@@ -65,11 +66,12 @@ const Admin = () => {
       if (rolesError) throw rolesError;
 
       // Get auth users (this might be limited, so we'll use what we have)
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+      const authUsers: User[] = authData?.users || [];
 
       // Combine the data
       const combinedUsers: UserProfile[] = profiles?.map(profile => {
-        const authUser = authUsers?.users?.find(u => u.id === profile.id);
+        const authUser = authUsers.find(u => u.id === profile.id);
         const roles = userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || [];
         
         return {
