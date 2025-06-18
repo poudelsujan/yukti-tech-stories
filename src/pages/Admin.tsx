@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProductManagement from '@/components/ProductManagement';
+import UserManagement from '@/components/UserManagement';
 
 interface UserProfile {
   id: string;
@@ -18,6 +19,7 @@ interface UserProfile {
   email: string;
   roles: string[];
   created_at: string;
+  last_sign_in_at: string | null;
 }
 
 const Admin = () => {
@@ -26,11 +28,18 @@ const Admin = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalAdmins: 0,
+    totalModerators: 0,
+    totalProducts: 0
+  });
 
   useEffect(() => {
     if (user) {
       checkAdminRole();
       loadUsers();
+      loadStats();
     }
   }, [user]);
 
@@ -53,25 +62,21 @@ const Admin = () => {
 
   const loadUsers = async () => {
     try {
-      // Get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
 
       if (profilesError) throw profilesError;
 
-      // Get all user roles
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
       if (rolesError) throw rolesError;
 
-      // Get auth users (this might be limited, so we'll use what we have)
       const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
       const authUsers: User[] = authData?.users || [];
 
-      // Combine the data
       const combinedUsers: UserProfile[] = profiles?.map(profile => {
         const authUser = authUsers.find(u => u.id === profile.id);
         const roles = userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || [];
@@ -81,7 +86,8 @@ const Admin = () => {
           full_name: profile.full_name || 'Unknown',
           email: authUser?.email || 'Unknown',
           roles,
-          created_at: authUser?.created_at || ''
+          created_at: authUser?.created_at || '',
+          last_sign_in_at: authUser?.last_sign_in_at || null
         };
       }) || [];
 
@@ -98,35 +104,34 @@ const Admin = () => {
     }
   };
 
-  const toggleUserRole = async (userId: string, role: 'admin' | 'moderator') => {
+  const loadStats = async () => {
     try {
-      const existingRole = users.find(u => u.id === userId)?.roles.includes(role);
-      
-      if (existingRole) {
-        // Remove role
-        await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', userId)
-          .eq('role', role);
-      } else {
-        // Add role
-        await supabase
-          .from('user_roles')
-          .insert({ user_id: userId, role });
-      }
+      // Load product count
+      const { count: productCount } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
 
-      await loadUsers(); // Reload users
-      toast({
-        title: "Role Updated",
-        description: `User role ${existingRole ? 'removed' : 'added'} successfully`
+      // Load user roles count
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role');
+
+      const adminCount = userRoles?.filter(ur => ur.role === 'admin').length || 0;
+      const moderatorCount = userRoles?.filter(ur => ur.role === 'moderator').length || 0;
+
+      // Load total users count
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id');
+
+      setStats({
+        totalUsers: profiles?.length || 0,
+        totalAdmins: adminCount,
+        totalModerators: moderatorCount,
+        totalProducts: productCount || 0
       });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update user role"
-      });
+      console.error('Error loading stats:', error);
     }
   };
 
@@ -185,14 +190,14 @@ const Admin = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
                 <Users className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
                 </div>
               </div>
             </CardContent>
@@ -204,9 +209,7 @@ const Admin = () => {
                 <UserCheck className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Admins</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {users.filter(u => u.roles.includes('admin')).length}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalAdmins}</p>
                 </div>
               </div>
             </CardContent>
@@ -218,9 +221,19 @@ const Admin = () => {
                 <Shield className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Moderators</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {users.filter(u => u.roles.includes('moderator')).length}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalModerators}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Package className="h-8 w-8 text-emerald-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Products</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
                 </div>
               </div>
             </CardContent>
@@ -245,54 +258,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage user roles and permissions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="text-center py-8">Loading users...</div>
-                ) : (
-                  <div className="space-y-4">
-                    {users.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h3 className="font-semibold">{user.full_name}</h3>
-                          <p className="text-sm text-gray-600">{user.email}</p>
-                          <div className="flex gap-2 mt-2">
-                            {user.roles.map((role) => (
-                              <Badge key={role} variant={role === 'admin' ? 'destructive' : 'secondary'}>
-                                {role}
-                              </Badge>
-                            ))}
-                            {user.roles.length === 0 && (
-                              <Badge variant="outline">user</Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant={user.roles.includes('admin') ? 'destructive' : 'outline'}
-                            onClick={() => toggleUserRole(user.id, 'admin')}
-                          >
-                            {user.roles.includes('admin') ? 'Remove Admin' : 'Make Admin'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={user.roles.includes('moderator') ? 'secondary' : 'outline'}
-                            onClick={() => toggleUserRole(user.id, 'moderator')}
-                          >
-                            {user.roles.includes('moderator') ? 'Remove Mod' : 'Make Mod'}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <UserManagement users={users} onUserUpdate={loadUsers} />
           </TabsContent>
         </Tabs>
       </div>

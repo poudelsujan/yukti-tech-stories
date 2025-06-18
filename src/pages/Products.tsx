@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import ProductCard from '@/components/ProductCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,6 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Search, Filter, Package, Plus } from 'lucide-react';
 import { sampleProducts } from '@/utils/sampleProducts';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface Product {
   id: string;
@@ -21,6 +32,7 @@ interface Product {
 
 const Products = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -29,15 +41,61 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [loadingSampleData, setLoadingSampleData] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [totalPages, setTotalPages] = useState(0);
+  const [paginatedProducts, setPaginatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     loadProducts();
     loadCategories();
-  }, []);
+    if (user) {
+      checkAdminRole();
+    }
+  }, [user]);
 
   useEffect(() => {
     filterAndSortProducts();
   }, [products, searchTerm, selectedCategory, sortBy]);
+
+  useEffect(() => {
+    // Update pagination when filtered products change
+    const total = Math.ceil(filteredProducts.length / itemsPerPage);
+    setTotalPages(total);
+    
+    // Reset to page 1 if current page is beyond total pages
+    if (currentPage > total && total > 0) {
+      setCurrentPage(1);
+    }
+    
+    updatePaginatedProducts();
+  }, [filteredProducts, currentPage, itemsPerPage]);
+
+  const checkAdminRole = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      setIsAdmin(!!data && !error);
+    } catch (error) {
+      setIsAdmin(false);
+    }
+  };
+
+  const updatePaginatedProducts = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setPaginatedProducts(filteredProducts.slice(startIndex, endIndex));
+  };
 
   const loadProducts = async () => {
     try {
@@ -93,7 +151,6 @@ const Products = () => {
         description: `${sampleProducts.length} sample products have been added successfully.`
       });
       
-      // Reload products after adding sample data
       loadProducts();
     } catch (error: any) {
       console.error('Error loading sample products:', error);
@@ -110,7 +167,6 @@ const Products = () => {
   const filterAndSortProducts = () => {
     let filtered = [...products];
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(product =>
         product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,12 +175,10 @@ const Products = () => {
       );
     }
 
-    // Filter by category
     if (selectedCategory && selectedCategory !== 'all') {
       filtered = filtered.filter(product => product.category === selectedCategory);
     }
 
-    // Sort products
     switch (sortBy) {
       case 'price-low':
         filtered.sort((a, b) => a.price - b.price);
@@ -137,17 +191,56 @@ const Products = () => {
         break;
       case 'newest':
       default:
-        // Keep original order (newest first from database)
         break;
     }
 
     setFilteredProducts(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategory('all');
     setSortBy('newest');
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const generatePageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
   };
 
   if (loading) {
@@ -172,8 +265,8 @@ const Products = () => {
           </p>
         </div>
 
-        {/* Show sample data loader if no products */}
-        {products.length === 0 && (
+        {/* Show sample data loader only to admin users if no products */}
+        {products.length === 0 && isAdmin && (
           <div className="bg-white rounded-lg shadow p-6 mb-8 text-center">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No products available</h3>
@@ -189,10 +282,19 @@ const Products = () => {
           </div>
         )}
 
+        {/* Show message to non-admin users if no products */}
+        {products.length === 0 && !isAdmin && (
+          <div className="bg-white rounded-lg shadow p-6 mb-8 text-center">
+            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No products available</h3>
+            <p className="text-gray-600">Products will be added soon. Please check back later.</p>
+          </div>
+        )}
+
         {/* Filters - only show if we have products */}
         {products.length > 0 && (
           <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
                 <div className="relative">
@@ -238,6 +340,20 @@ const Products = () => {
                 </Select>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Items per page</label>
+                <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="12">12 per page</SelectItem>
+                    <SelectItem value="24">24 per page</SelectItem>
+                    <SelectItem value="48">48 per page</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button variant="outline" onClick={clearFilters}>
                 <Filter className="h-4 w-4 mr-2" />
                 Clear Filters
@@ -246,32 +362,78 @@ const Products = () => {
           </div>
         )}
 
-        {/* Results count - only show if we have products */}
+        {/* Results count and pagination info */}
         {products.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-6 flex justify-between items-center">
             <p className="text-gray-600">
-              Showing {filteredProducts.length} of {products.length} products
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredProducts.length)} of {filteredProducts.length} products
             </p>
+            {totalPages > 1 && (
+              <p className="text-gray-600">
+                Page {currentPage} of {totalPages}
+              </p>
+            )}
           </div>
         )}
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={{
-                  ...product,
-                  image: product.image_url || '/placeholder.svg',
-                  specs: product.tags?.reduce((acc, tag, index) => {
-                    acc[`Feature ${index + 1}`] = tag;
-                    return acc;
-                  }, {} as Record<string, string>) || {}
-                }}
-              />
-            ))}
-          </div>
+        {paginatedProducts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+              {paginatedProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={{
+                    ...product,
+                    image: product.image_url || '/placeholder.svg',
+                    specs: product.tags?.reduce((acc, tag, index) => {
+                      acc[`Feature ${index + 1}`] = tag;
+                      return acc;
+                    }, {} as Record<string, string>) || {}
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    
+                    {generatePageNumbers().map((page, index) => (
+                      <PaginationItem key={index}>
+                        {page === '...' ? (
+                          <PaginationEllipsis />
+                        ) : (
+                          <PaginationLink
+                            onClick={() => handlePageChange(page as number)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        )}
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
         ) : products.length > 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-500 mb-4">
