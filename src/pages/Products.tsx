@@ -4,7 +4,9 @@ import ProductCard from '@/components/ProductCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Package, Plus } from 'lucide-react';
+import { sampleProducts } from '@/utils/sampleProducts';
+import { useToast } from '@/hooks/use-toast';
 
 interface Product {
   id: string;
@@ -18,6 +20,7 @@ interface Product {
 }
 
 const Products = () => {
+  const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -25,6 +28,7 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  const [loadingSampleData, setLoadingSampleData] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -72,6 +76,34 @@ const Products = () => {
       setCategories(data?.map(cat => cat.name) || []);
     } catch (error) {
       console.error('Error loading categories:', error);
+    }
+  };
+
+  const loadSampleProducts = async () => {
+    setLoadingSampleData(true);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .insert(sampleProducts);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sample Products Added",
+        description: `${sampleProducts.length} sample products have been added successfully.`
+      });
+      
+      // Reload products after adding sample data
+      loadProducts();
+    } catch (error: any) {
+      console.error('Error loading sample products:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to load sample products"
+      });
+    } finally {
+      setLoadingSampleData(false);
     }
   };
 
@@ -140,67 +172,88 @@ const Products = () => {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sort by</label>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest first</SelectItem>
-                  <SelectItem value="name">Name A-Z</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button variant="outline" onClick={clearFilters}>
-              <Filter className="h-4 w-4 mr-2" />
-              Clear Filters
+        {/* Show sample data loader if no products */}
+        {products.length === 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-8 text-center">
+            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No products available</h3>
+            <p className="text-gray-600 mb-4">Get started by adding some sample products to see how the store works.</p>
+            <Button 
+              onClick={loadSampleProducts} 
+              disabled={loadingSampleData}
+              className="flex items-center gap-2 mx-auto"
+            >
+              <Plus className="h-4 w-4" />
+              {loadingSampleData ? 'Adding Sample Products...' : 'Add Sample Products'}
             </Button>
           </div>
-        </div>
+        )}
 
-        {/* Results count */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            Showing {filteredProducts.length} of {products.length} products
-          </p>
-        </div>
+        {/* Filters - only show if we have products */}
+        {products.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sort by</label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest first</SelectItem>
+                    <SelectItem value="name">Name A-Z</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button variant="outline" onClick={clearFilters}>
+                <Filter className="h-4 w-4 mr-2" />
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Results count - only show if we have products */}
+        {products.length > 0 && (
+          <div className="mb-6">
+            <p className="text-gray-600">
+              Showing {filteredProducts.length} of {products.length} products
+            </p>
+          </div>
+        )}
 
         {/* Products Grid */}
         {filteredProducts.length > 0 ? (
@@ -219,7 +272,7 @@ const Products = () => {
               />
             ))}
           </div>
-        ) : (
+        ) : products.length > 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-500 mb-4">
               <Search className="h-16 w-16 mx-auto mb-4 opacity-50" />
@@ -230,7 +283,7 @@ const Products = () => {
               Clear all filters
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

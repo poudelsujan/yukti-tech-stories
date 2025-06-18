@@ -1,8 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,6 +23,27 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { name, email, phone, service, message }: ContactEmailRequest = await req.json();
+
+    console.log("Received contact form submission:", { name, email, service });
+
+    // Check if Resend API key is configured
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("RESEND_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ 
+          error: "Email service not configured. Please contact us directly at yuktigroup00@gmail.com" 
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Import Resend dynamically to avoid initialization errors
+    const { Resend } = await import("npm:resend@2.0.0");
+    const resend = new Resend(resendApiKey);
 
     // Send email to business
     const businessEmailResponse = await resend.emails.send({
@@ -80,7 +98,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-contact-email function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: "Failed to send message. Please try again or contact us directly at yuktigroup00@gmail.com",
+        details: error.message 
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
