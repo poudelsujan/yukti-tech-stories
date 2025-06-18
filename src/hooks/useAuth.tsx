@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,13 +45,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
+      // Use the actual URL from window.location instead of a hardcoded redirect
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
+          // Remove emailRedirectTo to avoid email confirmation issues
+          // emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName
           }
@@ -60,15 +61,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Sign Up Error",
-          description: error.message
-        });
+        // Handle specific error cases
+        if (error.message.includes('captcha')) {
+          toast({
+            variant: "destructive",
+            title: "Captcha Error",
+            description: "Please disable CAPTCHA in Supabase Dashboard > Auth > Settings"
+          });
+        } else if (error.message.includes('email')) {
+          toast({
+            variant: "destructive",
+            title: "Email Configuration Issue",
+            description: "Email service not properly configured. Please disable email confirmation in Supabase settings for testing."
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Sign Up Error",
+            description: error.message
+          });
+        }
       } else {
         toast({
           title: "Account Created Successfully",
-          description: "Please check your email to verify your account before signing in."
+          description: "You can now sign in with your credentials."
         });
       }
 

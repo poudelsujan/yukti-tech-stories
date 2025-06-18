@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, UserCheck, Shield, ArrowLeft } from 'lucide-react';
+import { Users, UserCheck, Shield, ArrowLeft, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ProductManagement from '@/components/ProductManagement';
 
 interface UserProfile {
   id: string;
@@ -225,55 +227,74 @@ const Admin = () => {
           </Card>
         </div>
 
-        {/* Users Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle>User Management</CardTitle>
-            <CardDescription>Manage user roles and permissions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-8">Loading users...</div>
-            ) : (
-              <div className="space-y-4">
-                {users.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-semibold">{user.full_name}</h3>
-                      <p className="text-sm text-gray-600">{user.email}</p>
-                      <div className="flex gap-2 mt-2">
-                        {user.roles.map((role) => (
-                          <Badge key={role} variant={role === 'admin' ? 'destructive' : 'secondary'}>
-                            {role}
-                          </Badge>
-                        ))}
-                        {user.roles.length === 0 && (
-                          <Badge variant="outline">user</Badge>
-                        )}
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="products" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="products" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Products
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Users
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="products">
+            <ProductManagement />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>Manage user roles and permissions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8">Loading users...</div>
+                ) : (
+                  <div className="space-y-4">
+                    {users.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h3 className="font-semibold">{user.full_name}</h3>
+                          <p className="text-sm text-gray-600">{user.email}</p>
+                          <div className="flex gap-2 mt-2">
+                            {user.roles.map((role) => (
+                              <Badge key={role} variant={role === 'admin' ? 'destructive' : 'secondary'}>
+                                {role}
+                              </Badge>
+                            ))}
+                            {user.roles.length === 0 && (
+                              <Badge variant="outline">user</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant={user.roles.includes('admin') ? 'destructive' : 'outline'}
+                            onClick={() => toggleUserRole(user.id, 'admin')}
+                          >
+                            {user.roles.includes('admin') ? 'Remove Admin' : 'Make Admin'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={user.roles.includes('moderator') ? 'secondary' : 'outline'}
+                            onClick={() => toggleUserRole(user.id, 'moderator')}
+                          >
+                            {user.roles.includes('moderator') ? 'Remove Mod' : 'Make Mod'}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant={user.roles.includes('admin') ? 'destructive' : 'outline'}
-                        onClick={() => toggleUserRole(user.id, 'admin')}
-                      >
-                        {user.roles.includes('admin') ? 'Remove Admin' : 'Make Admin'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={user.roles.includes('moderator') ? 'secondary' : 'outline'}
-                        onClick={() => toggleUserRole(user.id, 'moderator')}
-                      >
-                        {user.roles.includes('moderator') ? 'Remove Mod' : 'Make Mod'}
-                      </Button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
