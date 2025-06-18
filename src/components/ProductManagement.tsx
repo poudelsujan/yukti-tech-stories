@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, Upload, Image } from 'lucide-react';
+import SampleDataLoader from './SampleDataLoader';
 
 interface Product {
   id: string;
@@ -249,6 +249,11 @@ const ProductManagement = () => {
         </Button>
       </div>
 
+      {/* Sample Data Loader - Show only if no products exist */}
+      {products.length === 0 && (
+        <SampleDataLoader />
+      )}
+
       {/* Add/Edit Form */}
       {showAddForm && (
         <Card>
@@ -369,62 +374,70 @@ const ProductManagement = () => {
           <CardTitle>Products ({products.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Image</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    {product.image_url ? (
-                      <img src={product.image_url} alt={product.title} className="w-12 h-12 object-cover rounded" />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                        <Image className="h-6 w-6 text-gray-400" />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{product.title}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>Rs. {product.price.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      {product.trending && <Badge variant="secondary">Trending</Badge>}
-                      <Badge variant={product.in_stock ? "default" : "destructive"}>
-                        {product.in_stock ? "In Stock" : "Out of Stock"}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(product)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(product.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          {products.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
+              <p className="text-gray-600 mb-4">Get started by adding some sample products or create your own.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      {product.image_url ? (
+                        <img src={product.image_url} alt={product.title} className="w-12 h-12 object-cover rounded" />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                          <Image className="h-6 w-6 text-gray-400" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{product.title}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>Rs. {product.price.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {product.trending && <Badge variant="secondary">Trending</Badge>}
+                        <Badge variant={product.in_stock ? "default" : "destructive"}>
+                          {product.in_stock ? "In Stock" : "Out of Stock"}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(product)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(product.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
