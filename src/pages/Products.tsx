@@ -23,7 +23,7 @@ const Products = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
@@ -88,7 +88,7 @@ const Products = () => {
     }
 
     // Filter by category
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== 'all') {
       filtered = filtered.filter(product => product.category === selectedCategory);
     }
 
@@ -114,7 +114,7 @@ const Products = () => {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedCategory('');
+    setSelectedCategory('all');
     setSortBy('newest');
   };
 
@@ -163,7 +163,7 @@ const Products = () => {
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
