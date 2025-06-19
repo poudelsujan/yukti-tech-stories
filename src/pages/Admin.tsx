@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
@@ -49,16 +48,21 @@ const Admin = () => {
 
   const loadUsers = async () => {
     try {
-      // Get users with their profiles
+      // Get users with their profiles - simplified query
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          full_name,
-          user_roles (role)
-        `);
+        .select('id, full_name');
 
       if (profilesError) throw profilesError;
+
+      // Get user roles separately
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) {
+        console.warn('Could not fetch user roles:', rolesError);
+      }
 
       // Get auth users metadata
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
@@ -69,11 +73,13 @@ const Admin = () => {
 
       const usersWithRoles = profiles?.map(profile => {
         const authUser = authUsers?.users?.find(u => u.id === profile.id);
+        const roles = userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || [];
+        
         return {
           id: profile.id,
           full_name: profile.full_name || 'Unknown',
           email: authUser?.email || 'Unknown',
-          roles: profile.user_roles?.map((r: any) => r.role) || [],
+          roles: roles,
           created_at: authUser?.created_at || new Date().toISOString(),
           last_sign_in_at: authUser?.last_sign_in_at || null
         };

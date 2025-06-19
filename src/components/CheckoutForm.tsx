@@ -130,7 +130,7 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
           postal_code: formData.postal_code,
           country: formData.country
         },
-        order_items: cartItems,
+        order_items: cartItems as any, // Convert CartItem[] to Json
         subtotal: subtotal,
         discount_amount: discountAmount,
         discount_code: appliedDiscount?.code || null,

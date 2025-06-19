@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ import { Plus, Edit, Trash2, Percent, DollarSign } from 'lucide-react';
 interface DiscountCode {
   id: string;
   code: string;
-  discount_type: 'percentage' | 'fixed';
+  discount_type: string; // Changed from union type to string to match database
   discount_value: number;
   min_order_amount: number;
   max_uses: number | null;
@@ -115,7 +114,7 @@ const DiscountManager = () => {
     setEditingDiscount(discount);
     setFormData({
       code: discount.code,
-      discount_type: discount.discount_type,
+      discount_type: discount.discount_type as 'percentage' | 'fixed',
       discount_value: discount.discount_value.toString(),
       min_order_amount: discount.min_order_amount.toString(),
       max_uses: discount.max_uses?.toString() || '',
