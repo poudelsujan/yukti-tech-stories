@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit, Trash2, Upload, Image, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, Image, Package, ExternalLink } from 'lucide-react';
 import SampleDataLoader from './SampleDataLoader';
 
 interface Product {
@@ -21,6 +21,7 @@ interface Product {
   price: number;
   category: string;
   image_url: string | null;
+  daraz_link: string | null;
   tags: string[] | null;
   trending: boolean | null;
   in_stock: boolean | null;
@@ -47,6 +48,7 @@ const ProductManagement = () => {
     description: '',
     price: '',
     category: '',
+    daraz_link: '',
     tags: '',
     trending: false,
     in_stock: true
@@ -139,6 +141,7 @@ const ProductManagement = () => {
         price: parseFloat(formData.price),
         category: formData.category,
         image_url: imageUrl,
+        daraz_link: formData.daraz_link || null,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
         trending: formData.trending,
         in_stock: formData.in_stock
@@ -188,6 +191,7 @@ const ProductManagement = () => {
       description: product.description || '',
       price: product.price.toString(),
       category: product.category,
+      daraz_link: product.daraz_link || '',
       tags: product.tags?.join(', ') || '',
       trending: product.trending || false,
       in_stock: product.in_stock !== false
@@ -227,6 +231,7 @@ const ProductManagement = () => {
       description: '',
       price: '',
       category: '',
+      daraz_link: '',
       tags: '',
       trending: false,
       in_stock: true
@@ -278,7 +283,7 @@ const ProductManagement = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price</Label>
+                  <Label htmlFor="price">Price (Rs.)</Label>
                   <Input
                     id="price"
                     type="number"
@@ -314,6 +319,19 @@ const ProductManagement = () => {
                     onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="daraz_link">Daraz Link (Optional)</Label>
+                <Input
+                  id="daraz_link"
+                  value={formData.daraz_link}
+                  onChange={(e) => setFormData({...formData, daraz_link: e.target.value})}
+                  placeholder="https://www.daraz.pk/products/..."
+                />
+                <p className="text-xs text-gray-500">
+                  Add a Daraz link to redirect customers to purchase on Daraz
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -389,6 +407,7 @@ const ProductManagement = () => {
                   <TableHead>Title</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
+                  <TableHead>External Links</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -408,6 +427,19 @@ const ProductManagement = () => {
                     <TableCell className="font-medium">{product.title}</TableCell>
                     <TableCell>{product.category}</TableCell>
                     <TableCell>Rs. {product.price.toLocaleString()}</TableCell>
+                    <TableCell>
+                      {product.daraz_link && (
+                        <a 
+                          href={product.daraz_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Daraz
+                        </a>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         {product.trending && <Badge variant="secondary">Trending</Badge>}

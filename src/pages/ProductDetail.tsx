@@ -1,24 +1,55 @@
 
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { ExternalLink, ShoppingCart } from 'lucide-react';
+import CustomerReviews from '@/components/CustomerReviews';
+
+interface Product {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  category: string;
+  image_url: string | null;
+  daraz_link: string | null;
+  tags: string[] | null;
+  trending: boolean | null;
+  in_stock: boolean | null;
+}
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const [product, setProduct] = useState<any>(null);
-  const [selectedColor, setSelectedColor] = useState("");
-  const [currentStory, setCurrentStory] = useState(0);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    import('../assets/products.json').then((data) => {
-      const productData = data.default[id as string];
-      if (productData) {
-        setProduct(productData);
-        setSelectedColor(productData.colors[0]);
-      }
-    });
+    if (id) {
+      loadProduct();
+    }
   }, [id]);
 
-  if (!product) {
+  const loadProduct = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setProduct(data);
+    } catch (error) {
+      console.error('Error loading product:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -29,27 +60,34 @@ const ProductDetail = () => {
     );
   }
 
-  const currentStoryData = product.stories.length > 0 ? product.stories[currentStory] : null;
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
+          <p className="text-gray-600 mb-4">Sorry, we couldn't find the product you're looking for.</p>
+          <Link to="/products">
+            <Button>Back to Products</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
             {/* Product Images */}
             <div>
               <div className="aspect-square rounded-lg overflow-hidden mb-4">
                 <img 
-                  src={product.image} 
+                  src={product.image_url || '/placeholder.svg'} 
                   alt={product.title}
                   className="w-full h-full object-cover"
                 />
               </div>
-              {product.offer && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
-                  <span className="text-red-600 font-semibold">{product.offer}</span>
-                </div>
-              )}
             </div>
 
             {/* Product Info */}
@@ -71,103 +109,72 @@ const ProductDetail = () => {
                 <span className="text-3xl font-bold text-gray-900">
                   Rs. {product.price.toLocaleString()}
                 </span>
-                {product.originalPrice && (
-                  <span className="text-xl text-gray-500 line-through ml-3">
-                    Rs. {product.originalPrice.toLocaleString()}
-                  </span>
-                )}
               </div>
 
-              {/* Color Selection */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Available Colors</h3>
-                <div className="flex space-x-3">
-                  {product.colors.map((color: string) => (
-                    <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`px-4 py-2 rounded-lg border transition-colors ${
-                        selectedColor === color
-                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      {color}
-                    </button>
-                  ))}
+              {product.description && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                  <p className="text-gray-700 leading-relaxed">{product.description}</p>
                 </div>
-              </div>
+              )}
 
-              {/* Specifications */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Specifications</h3>
-                <div className="grid grid-cols-1 gap-2">
-                  {Object.entries(product.specs).map(([key, value]) => (
-                    <div key={key} className="flex justify-between py-2 border-b border-gray-100">
-                      <span className="text-gray-600 capitalize">{key}:</span>
-                      <span className="text-gray-900 font-medium">{value as string}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Buy Button */}
-              <button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-lg font-semibold text-lg transition-colors">
-                Buy Now - Rs. {product.price.toLocaleString()}
-              </button>
-            </div>
-          </div>
-
-          {/* Customer Story Section - Only show if stories exist */}
-          {product.stories.length > 0 && currentStoryData && (
-            <div className="border-t border-gray-100 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Customer Stories</h2>
-              
-              <div className="max-w-4xl mx-auto">
-                <div className="bg-gradient-to-r from-blue-50 to-emerald-50 rounded-lg p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                      <img 
-                        src={currentStoryData.image} 
-                        alt={currentStoryData.title}
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
-                        {currentStoryData.title}
-                      </h3>
-                      <p className="text-emerald-600 font-medium mb-1">
-                        {currentStoryData.persona}
-                      </p>
-                      <p className="text-gray-500 text-sm mb-4">
-                        📍 {currentStoryData.location}
-                      </p>
-                      <p className="text-gray-700 leading-relaxed">
-                        {currentStoryData.text}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                {product.stories.length > 1 && (
-                  <div className="flex justify-center mt-6 space-x-2">
-                    {product.stories.map((_: any, index: number) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentStory(index)}
-                        className={`w-3 h-3 rounded-full transition-colors ${
-                          index === currentStory ? 'bg-emerald-500' : 'bg-gray-300'
-                        }`}
-                      />
+              {/* Tags */}
+              {product.tags && product.tags.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Features</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {product.tags.map((tag, index) => (
+                      <Badge key={index} variant="outline">
+                        {tag}
+                      </Badge>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <Link to="/checkout" className="flex-1">
+                    <Button className="w-full" size="lg" disabled={!product.in_stock}>
+                      <ShoppingCart className="h-5 w-5 mr-2" />
+                      {product.in_stock ? `Buy Now - Rs. ${product.price.toLocaleString()}` : 'Out of Stock'}
+                    </Button>
+                  </Link>
+                </div>
+
+                {product.daraz_link && (
+                  <a 
+                    href={product.daraz_link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-orange-500 text-orange-600 hover:bg-orange-50"
+                      size="lg"
+                    >
+                      <ExternalLink className="h-5 w-5 mr-2" />
+                      Buy on Daraz
+                    </Button>
+                  </a>
                 )}
               </div>
+
+              {!product.in_stock && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-700 text-sm">
+                    This product is currently out of stock. Please check back later or contact us for availability.
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
+
+        {/* Customer Reviews Section */}
+        <CustomerReviews productId={product.id} />
       </div>
     </div>
   );

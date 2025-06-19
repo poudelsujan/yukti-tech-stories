@@ -9,6 +9,152 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      customer_reviews: {
+        Row: {
+          comment: string
+          created_at: string
+          customer_name: string
+          id: string
+          location: string | null
+          product_id: string
+          rating: number | null
+          updated_at: string
+          user_id: string | null
+          verified_purchase: boolean | null
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          customer_name: string
+          id?: string
+          location?: string | null
+          product_id: string
+          rating?: number | null
+          updated_at?: string
+          user_id?: string | null
+          verified_purchase?: boolean | null
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          customer_name?: string
+          id?: string
+          location?: string | null
+          product_id?: string
+          rating?: number | null
+          updated_at?: string
+          user_id?: string | null
+          verified_purchase?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_codes: {
+        Row: {
+          active: boolean | null
+          code: string
+          created_at: string
+          created_by: string | null
+          current_uses: number | null
+          discount_type: string
+          discount_value: number
+          id: string
+          max_uses: number | null
+          min_order_amount: number | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          max_uses?: number | null
+          min_order_amount?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          max_uses?: number | null
+          min_order_amount?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          discount_amount: number | null
+          discount_code: string | null
+          id: string
+          order_items: Json
+          order_status: string | null
+          payment_status: string | null
+          shipping_address: Json
+          subtotal: number
+          total_amount: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          discount_amount?: number | null
+          discount_code?: string | null
+          id?: string
+          order_items: Json
+          order_status?: string | null
+          payment_status?: string | null
+          shipping_address: Json
+          subtotal: number
+          total_amount: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          discount_amount?: number | null
+          discount_code?: string | null
+          id?: string
+          order_items?: Json
+          order_status?: string | null
+          payment_status?: string | null
+          shipping_address?: Json
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           created_at: string
@@ -35,6 +181,7 @@ export type Database = {
           category: string
           created_at: string
           created_by: string | null
+          daraz_link: string | null
           description: string | null
           id: string
           image_url: string | null
@@ -49,6 +196,7 @@ export type Database = {
           category: string
           created_at?: string
           created_by?: string | null
+          daraz_link?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -63,6 +211,7 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
+          daraz_link?: string | null
           description?: string | null
           id?: string
           image_url?: string | null

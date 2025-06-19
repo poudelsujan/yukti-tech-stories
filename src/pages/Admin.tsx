@@ -1,17 +1,15 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { Users, UserCheck, Shield, ArrowLeft, Package } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { User } from '@supabase/supabase-js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Settings, Users, Package, Percent, BarChart3, ShoppingBag } from 'lucide-react';
 import ProductManagement from '@/components/ProductManagement';
 import UserManagement from '@/components/UserManagement';
+import DiscountManager from '@/components/DiscountManager';
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
   id: string;
@@ -22,227 +20,211 @@ interface UserProfile {
   last_sign_in_at: string | null;
 }
 
+interface DashboardStats {
+  totalUsers: number;
+  totalProducts: number;
+  totalOrders: number;
+  totalRevenue: number;
+  activeDiscounts: number;
+}
+
 const Admin = () => {
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const { isAdmin, loading } = useAdminStatus();
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
-    totalAdmins: 0,
-    totalModerators: 0,
-    totalProducts: 0
+    totalProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    activeDiscounts: 0
   });
 
   useEffect(() => {
-    if (user) {
-      checkAdminRole();
+    if (isAdmin) {
       loadUsers();
-      loadStats();
+      loadDashboardStats();
     }
-  }, [user]);
-
-  const checkAdminRole = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      setIsAdmin(!!data && !error);
-    } catch (error) {
-      setIsAdmin(false);
-    }
-  };
+  }, [isAdmin]);
 
   const loadUsers = async () => {
     try {
+      // Get users with their profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*');
+        .select(`
+          id,
+          full_name,
+          user_roles (role)
+        `);
 
       if (profilesError) throw profilesError;
 
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
+      // Get auth users metadata
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) {
+        console.warn('Could not fetch auth users:', authError);
+      }
 
-      if (rolesError) throw rolesError;
-
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-      const authUsers: User[] = authData?.users || [];
-
-      const combinedUsers: UserProfile[] = profiles?.map(profile => {
-        const authUser = authUsers.find(u => u.id === profile.id);
-        const roles = userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || [];
-        
+      const usersWithRoles = profiles?.map(profile => {
+        const authUser = authUsers?.users?.find(u => u.id === profile.id);
         return {
           id: profile.id,
           full_name: profile.full_name || 'Unknown',
           email: authUser?.email || 'Unknown',
-          roles,
-          created_at: authUser?.created_at || '',
+          roles: profile.user_roles?.map((r: any) => r.role) || [],
+          created_at: authUser?.created_at || new Date().toISOString(),
           last_sign_in_at: authUser?.last_sign_in_at || null
         };
       }) || [];
 
-      setUsers(combinedUsers);
+      setUsers(usersWithRoles);
     } catch (error) {
       console.error('Error loading users:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load users"
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const loadStats = async () => {
+  const loadDashboardStats = async () => {
     try {
-      // Load product count
+      // Get total users count
+      const { count: userCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Get total products count
       const { count: productCount } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true });
 
-      // Load user roles count
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select('role');
+      // Get total orders count and revenue
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('total_amount');
 
-      const adminCount = userRoles?.filter(ur => ur.role === 'admin').length || 0;
-      const moderatorCount = userRoles?.filter(ur => ur.role === 'moderator').length || 0;
+      const totalRevenue = orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
 
-      // Load total users count
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id');
+      // Get active discount codes count
+      const { count: discountCount } = await supabase
+        .from('discount_codes')
+        .select('*', { count: 'exact', head: true })
+        .eq('active', true);
 
       setStats({
-        totalUsers: profiles?.length || 0,
-        totalAdmins: adminCount,
-        totalModerators: moderatorCount,
-        totalProducts: productCount || 0
+        totalUsers: userCount || 0,
+        totalProducts: productCount || 0,
+        totalOrders: orders?.length || 0,
+        totalRevenue,
+        activeDiscounts: discountCount || 0
       });
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.error('Error loading dashboard stats:', error);
     }
   };
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Please sign in to access admin panel</h1>
-          <Button asChild>
-            <Link to="/auth">Sign In</Link>
-          </Button>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading admin panel...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-red-600">Access Denied</CardTitle>
+            <CardDescription>Please sign in to access the admin panel</CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-4">You don't have permission to access the admin panel.</p>
-          <Button asChild>
-            <Link to="/">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Link>
-          </Button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-red-600">Access Denied</CardTitle>
+            <CardDescription>You don't have permission to access this page</CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-gray-600">Only administrators can access this panel.</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Admin Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link to="/" className="text-emerald-600 hover:text-emerald-700 mr-4">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Welcome, {user.email}</span>
-              <Button variant="outline" onClick={signOut}>
-                Sign Out
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600">Manage your e-commerce platform</p>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Dashboard Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Users className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalUsers}</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <UserCheck className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Admins</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalAdmins}</p>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalProducts}</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Shield className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Moderators</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalModerators}</p>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalOrders}</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Package className="h-8 w-8 text-emerald-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Products</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Rs. {stats.totalRevenue.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Discounts</CardTitle>
+              <Percent className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeDiscounts}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
         <Tabs defaultValue="products" className="space-y-6">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
               Products
@@ -250,6 +232,14 @@ const Admin = () => {
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users
+            </TabsTrigger>
+            <TabsTrigger value="discounts" className="flex items-center gap-2">
+              <Percent className="h-4 w-4" />
+              Discounts
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Settings
             </TabsTrigger>
           </TabsList>
 
@@ -259,6 +249,22 @@ const Admin = () => {
 
           <TabsContent value="users">
             <UserManagement users={users} onUserUpdate={loadUsers} />
+          </TabsContent>
+
+          <TabsContent value="discounts">
+            <DiscountManager />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle>System Settings</CardTitle>
+                <CardDescription>Configure your e-commerce platform settings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">Settings panel coming soon...</p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
