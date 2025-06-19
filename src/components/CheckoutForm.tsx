@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -78,7 +77,7 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
           title: "Discount Expired",
           description: "This discount code has expired."
         });
-        setAppl iedDiscount(null);
+        setAppliedDiscount(null);
         return;
       }
 
