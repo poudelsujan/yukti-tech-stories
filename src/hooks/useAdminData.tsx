@@ -19,6 +19,18 @@ interface DashboardStats {
   activeDiscounts: number;
 }
 
+interface AuthUser {
+  id: string;
+  email?: string;
+  created_at: string;
+  last_sign_in_at?: string | null;
+  user_metadata?: {
+    full_name?: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 export const useAdminData = (isAdmin: boolean) => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
@@ -55,11 +67,14 @@ export const useAdminData = (isAdmin: boolean) => {
       }
 
       // Get auth users metadata
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      const { data: authUsersResponse, error: authError } = await supabase.auth.admin.listUsers();
       
       if (authError) {
         console.warn('Could not fetch auth users:', authError);
       }
+
+      // Type the auth users properly
+      const authUsers: AuthUser[] = (authUsersResponse?.users as AuthUser[]) || [];
 
       // Combine profiles with auth data and roles
       const allUsers: UserProfile[] = [];
@@ -67,7 +82,7 @@ export const useAdminData = (isAdmin: boolean) => {
       // First, add users from profiles
       if (profiles && Array.isArray(profiles)) {
         profiles.forEach(profile => {
-          const authUser = authUsers?.users?.find(u => u.id === profile.id);
+          const authUser = authUsers.find(u => u.id === profile.id);
           const roles = userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || [];
           
           allUsers.push({
@@ -82,8 +97,8 @@ export const useAdminData = (isAdmin: boolean) => {
       }
 
       // Then, add any auth users not in profiles
-      if (authUsers?.users && Array.isArray(authUsers.users)) {
-        authUsers.users.forEach(authUser => {
+      if (authUsers && Array.isArray(authUsers)) {
+        authUsers.forEach(authUser => {
           if (!allUsers.find(u => u.id === authUser.id)) {
             const roles = userRoles?.filter(ur => ur.user_id === authUser.id).map(ur => ur.role) || [];
             
