@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Star, MessageCircle, MapPin, Calendar, Plus } from 'lucide-react';
+import { Star, MessageCircle, MapPin, Calendar, Plus, LogIn } from 'lucide-react';
 
 interface Review {
   id: string;
@@ -42,6 +41,16 @@ const CustomerReviews = ({ productId }: CustomerReviewsProps) => {
     loadReviews();
   }, [productId]);
 
+  useEffect(() => {
+    // Pre-fill user name if logged in
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        customer_name: user.user_metadata?.full_name || user.email || ''
+      }));
+    }
+  }, [user]);
+
   const loadReviews = async () => {
     try {
       const { data, error } = await supabase
@@ -62,12 +71,21 @@ const CustomerReviews = ({ productId }: CustomerReviewsProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please sign in to add a review."
+      });
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('customer_reviews')
         .insert({
           product_id: productId,
-          user_id: user?.id || null,
+          user_id: user.id,
           customer_name: formData.customer_name,
           rating: formData.rating,
           comment: formData.comment,
@@ -82,7 +100,7 @@ const CustomerReviews = ({ productId }: CustomerReviewsProps) => {
       });
 
       setFormData({
-        customer_name: '',
+        customer_name: user.user_metadata?.full_name || user.email || '',
         rating: 5,
         comment: '',
         location: ''
@@ -134,14 +152,21 @@ const CustomerReviews = ({ productId }: CustomerReviewsProps) => {
             {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
           </p>
         </div>
-        <Button onClick={() => setShowAddReview(true)} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Review
-        </Button>
+        {user ? (
+          <Button onClick={() => setShowAddReview(true)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Review
+          </Button>
+        ) : (
+          <Button variant="outline" onClick={() => window.location.href = '/auth'} className="flex items-center gap-2">
+            <LogIn className="h-4 w-4" />
+            Sign In to Review
+          </Button>
+        )}
       </div>
 
       {/* Add Review Form */}
-      {showAddReview && (
+      {showAddReview && user && (
         <Card>
           <CardHeader>
             <CardTitle>Share Your Experience</CardTitle>

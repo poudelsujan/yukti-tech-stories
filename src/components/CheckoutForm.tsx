@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart, CreditCard, MapPin, Percent } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ShoppingCart, CreditCard, MapPin, Percent, QrCode, Users } from 'lucide-react';
 
 interface CartItem {
   id: string;
@@ -28,6 +30,9 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
   const [loading, setLoading] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState('qr');
+  const [qrScreenshot, setQrScreenshot] = useState<File | null>(null);
+  const [transactionId, setTransactionId] = useState('');
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_email: user?.email || '',
@@ -114,9 +119,26 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setQrScreenshot(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (paymentMethod === 'qr' && (!qrScreenshot || !transactionId)) {
+      toast({
+        variant: "destructive",
+        title: "Missing Payment Information",
+        description: "Please upload QR payment screenshot and enter transaction ID."
+      });
+      setLoading(false);
+      return;
+    }
 
     try {
       const orderData = {
@@ -134,7 +156,10 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
         subtotal: subtotal,
         discount_amount: discountAmount,
         discount_code: appliedDiscount?.code || null,
-        total_amount: total
+        total_amount: total,
+        payment_method: paymentMethod,
+        transaction_id: transactionId || null,
+        payment_status: paymentMethod === 'qr' ? 'pending_verification' : 'pending'
       };
 
       const { data, error } = await supabase
@@ -155,7 +180,7 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
 
       toast({
         title: "Order Placed Successfully!",
-        description: `Your order #${data.id.slice(0, 8)} has been placed. You will receive a confirmation email shortly.`
+        description: `Your order #${data.id.slice(0, 8)} has been placed. ${paymentMethod === 'qr' ? 'Payment verification is pending.' : 'You will receive a confirmation email shortly.'}`
       });
 
       onOrderComplete();
@@ -261,12 +286,13 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Billing & Shipping
+            Billing & Payment
           </CardTitle>
           <CardDescription>Please fill in your details to complete the order</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Customer Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="customer_name">Full Name</Label>
@@ -302,6 +328,7 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
 
             <Separator />
 
+            {/* Shipping Address */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
@@ -349,6 +376,76 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
                   />
                 </div>
               </div>
+            </div>
+
+            <Separator />
+
+            {/* Payment Method */}
+            <div className="space-y-4">
+              <h3 className="font-medium">Payment Method</h3>
+              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="qr" id="qr" />
+                  <Label htmlFor="qr" className="flex items-center gap-2">
+                    <QrCode className="h-4 w-4" />
+                    Pay Via QR Code
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="partner" id="partner" />
+                  <Label htmlFor="partner" className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Pay Via Partner
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              {/* QR Payment Details */}
+              {paymentMethod === 'qr' && (
+                <Card className="p-4 bg-blue-50">
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <QrCode className="h-16 w-16 mx-auto mb-2 text-blue-600" />
+                      <h4 className="font-medium">QR Code Payment</h4>
+                      <p className="text-sm text-gray-600">Scan our QR code to make payment</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="transaction_id">Transaction ID</Label>
+                      <Input
+                        id="transaction_id"
+                        value={transactionId}
+                        onChange={(e) => setTransactionId(e.target.value)}
+                        placeholder="Enter transaction ID from your payment"
+                        required={paymentMethod === 'qr'}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="qr_screenshot">Upload Payment Screenshot</Label>
+                      <Input
+                        id="qr_screenshot"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        required={paymentMethod === 'qr'}
+                      />
+                      <p className="text-xs text-gray-500">Upload a screenshot of your successful payment</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Partner Payment Details */}
+              {paymentMethod === 'partner' && (
+                <Card className="p-4 bg-green-50">
+                  <div className="text-center">
+                    <Users className="h-16 w-16 mx-auto mb-2 text-green-600" />
+                    <h4 className="font-medium">Partner Payment</h4>
+                    <p className="text-sm text-gray-600">Our partner will contact you for payment arrangements</p>
+                  </div>
+                </Card>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>

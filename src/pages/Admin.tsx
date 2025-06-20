@@ -71,21 +71,45 @@ const Admin = () => {
         console.warn('Could not fetch auth users:', authError);
       }
 
-      const usersWithRoles = profiles?.map(profile => {
-        const authUser = authUsers?.users?.find(u => u.id === profile.id);
-        const roles = userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || [];
-        
-        return {
-          id: profile.id,
-          full_name: profile.full_name || 'Unknown',
-          email: authUser?.email || 'Unknown',
-          roles: roles,
-          created_at: authUser?.created_at || new Date().toISOString(),
-          last_sign_in_at: authUser?.last_sign_in_at || null
-        };
-      }) || [];
+      // Combine profiles with auth data and roles
+      const allUsers: UserProfile[] = [];
+      
+      // First, add users from profiles
+      if (profiles) {
+        profiles.forEach(profile => {
+          const authUser = authUsers?.users?.find(u => u.id === profile.id);
+          const roles = userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || [];
+          
+          allUsers.push({
+            id: profile.id,
+            full_name: profile.full_name || 'Unknown',
+            email: authUser?.email || 'Unknown',
+            roles: roles,
+            created_at: authUser?.created_at || new Date().toISOString(),
+            last_sign_in_at: authUser?.last_sign_in_at || null
+          });
+        });
+      }
 
-      setUsers(usersWithRoles);
+      // Then, add any auth users not in profiles
+      if (authUsers?.users) {
+        authUsers.users.forEach(authUser => {
+          if (!allUsers.find(u => u.id === authUser.id)) {
+            const roles = userRoles?.filter(ur => ur.user_id === authUser.id).map(ur => ur.role) || [];
+            
+            allUsers.push({
+              id: authUser.id,
+              full_name: authUser.user_metadata?.full_name || 'Unknown',
+              email: authUser.email || 'Unknown',
+              roles: roles,
+              created_at: authUser.created_at || new Date().toISOString(),
+              last_sign_in_at: authUser.last_sign_in_at || null
+            });
+          }
+        });
+      }
+
+      setUsers(allUsers);
     } catch (error) {
       console.error('Error loading users:', error);
     }
