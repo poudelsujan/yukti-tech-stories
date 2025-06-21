@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -39,10 +38,12 @@ const ProductManagement = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [discountCodes, setDiscountCodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -57,6 +58,7 @@ const ProductManagement = () => {
   useEffect(() => {
     loadProducts();
     loadCategories();
+    loadDiscountCodes();
   }, []);
 
   const loadProducts = async () => {
@@ -92,6 +94,21 @@ const ProductManagement = () => {
     }
   };
 
+  const loadDiscountCodes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .eq('active', true)
+        .order('code');
+
+      if (error) throw error;
+      setDiscountCodes(data || []);
+    } catch (error) {
+      console.error('Error loading discount codes:', error);
+    }
+  };
+
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
@@ -117,6 +134,47 @@ const ProductManagement = () => {
         description: "Failed to upload image"
       });
       return null;
+    }
+  };
+
+  const loadProductDiscounts = async (productId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('product_discounts')
+        .select('discount_code_id')
+        .eq('product_id', productId);
+
+      if (error) throw error;
+      setSelectedDiscounts(data?.map(pd => pd.discount_code_id) || []);
+    } catch (error) {
+      console.error('Error loading product discounts:', error);
+    }
+  };
+
+  const saveProductDiscounts = async (productId: string) => {
+    try {
+      // First remove existing product discounts
+      await supabase
+        .from('product_discounts')
+        .delete()
+        .eq('product_id', productId);
+
+      // Then add new ones
+      if (selectedDiscounts.length > 0) {
+        const discountData = selectedDiscounts.map(discountId => ({
+          product_id: productId,
+          discount_code_id: discountId
+        }));
+
+        const { error } = await supabase
+          .from('product_discounts')
+          .insert(discountData);
+
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error('Error saving product discounts:', error);
+      throw error;
     }
   };
 
@@ -147,6 +205,8 @@ const ProductManagement = () => {
         in_stock: formData.in_stock
       };
 
+      let productId: string;
+
       if (editingProduct) {
         const { error } = await supabase
           .from('products')
@@ -154,21 +214,30 @@ const ProductManagement = () => {
           .eq('id', editingProduct.id);
 
         if (error) throw error;
+        productId = editingProduct.id;
+        
         toast({
           title: "Product Updated",
           description: "Product has been updated successfully"
         });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('products')
-          .insert(productData);
+          .insert(productData)
+          .select()
+          .single();
 
         if (error) throw error;
+        productId = data.id;
+        
         toast({
           title: "Product Added",
           description: "Product has been added successfully"
         });
       }
+
+      // Save product discounts
+      await saveProductDiscounts(productId);
 
       resetForm();
       loadProducts();
@@ -184,7 +253,7 @@ const ProductManagement = () => {
     }
   };
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = async (product: Product) => {
     setEditingProduct(product);
     setFormData({
       title: product.title,
@@ -196,6 +265,7 @@ const ProductManagement = () => {
       trending: product.trending || false,
       in_stock: product.in_stock !== false
     });
+    await loadProductDiscounts(product.id);
     setShowAddForm(true);
   };
 
@@ -239,6 +309,7 @@ const ProductManagement = () => {
     setEditingProduct(null);
     setShowAddForm(false);
     setImageFile(null);
+    setSelectedDiscounts([]);
   };
 
   return (
@@ -353,6 +424,35 @@ const ProductManagement = () => {
                   placeholder="electronics, smartphone, android"
                 />
               </div>
+
+              {/* Discount Codes Selection */}
+              {discountCodes.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Apply Discount Codes</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {discountCodes.map((discount) => (
+                      <div key={discount.id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`discount-${discount.id}`}
+                          checked={selectedDiscounts.includes(discount.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedDiscounts([...selectedDiscounts, discount.id]);
+                            } else {
+                              setSelectedDiscounts(selectedDiscounts.filter(id => id !== discount.id));
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={`discount-${discount.id}`} className="text-sm">
+                          {discount.code} ({discount.discount_type === 'percentage' ? `${discount.discount_value}%` : `Rs.${discount.discount_value}`})
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center space-x-6">
                 <div className="flex items-center space-x-2">

@@ -176,6 +176,45 @@ export type Database = {
         }
         Relationships: []
       }
+      product_discounts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          discount_code_id: string
+          id: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          discount_code_id: string
+          id?: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          discount_code_id?: string
+          id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_discounts_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_discounts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string

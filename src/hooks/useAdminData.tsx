@@ -40,13 +40,14 @@ export const useAdminData = (isAdmin: boolean) => {
     try {
       console.log('Loading users...');
       
-      // Get profiles first
+      // Get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name');
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
+        return;
       }
 
       // Get user roles
@@ -58,56 +59,53 @@ export const useAdminData = (isAdmin: boolean) => {
         console.error('Error fetching user roles:', rolesError);
       }
 
-      // Try to get auth users - this might fail due to RLS
+      // Get all auth users for email information
       let authUsers: any[] = [];
       try {
         const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-        if (authError) {
-          console.warn('Could not fetch auth users (this is normal for non-service-role keys):', authError);
+        if (!authError && authData?.users) {
+          authUsers = authData.users;
+          console.log(`Found ${authUsers.length} auth users`);
         } else {
-          authUsers = authData?.users || [];
+          console.warn('Could not fetch auth users:', authError);
         }
       } catch (error) {
         console.warn('Auth admin access not available:', error);
       }
 
-      // Combine the data we have
-      const combinedUsers: UserProfile[] = [];
+      // Create comprehensive user list
+      const allUserIds = new Set<string>();
       
-      // Start with profiles if we have them
-      if (profiles && Array.isArray(profiles)) {
-        profiles.forEach(profile => {
-          const authUser = authUsers.find(u => u.id === profile.id);
-          const roles = userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || [];
-          
+      // Add profile IDs
+      if (profiles) {
+        profiles.forEach(profile => allUserIds.add(profile.id));
+      }
+      
+      // Add auth user IDs
+      authUsers.forEach(authUser => allUserIds.add(authUser.id));
+
+      const combinedUsers: UserProfile[] = [];
+
+      // Process each unique user ID
+      Array.from(allUserIds).forEach(userId => {
+        const profile = profiles?.find(p => p.id === userId);
+        const authUser = authUsers.find(u => u.id === userId);
+        const roles = userRoles?.filter(ur => ur.user_id === userId).map(ur => ur.role) || [];
+        
+        // Only include users that exist in either profiles or auth
+        if (profile || authUser) {
           combinedUsers.push({
-            id: profile.id,
-            full_name: profile.full_name || 'Unknown User',
+            id: userId,
+            full_name: profile?.full_name || authUser?.user_metadata?.full_name || 'Unknown User',
             email: authUser?.email || 'Email not available',
             roles: roles,
             created_at: authUser?.created_at || new Date().toISOString(),
             last_sign_in_at: authUser?.last_sign_in_at || null
           });
-        });
-      }
-
-      // Add auth-only users if we have auth access and they're not already included
-      authUsers.forEach(authUser => {
-        if (!combinedUsers.find(u => u.id === authUser.id)) {
-          const roles = userRoles?.filter(ur => ur.user_id === authUser.id).map(ur => ur.role) || [];
-          
-          combinedUsers.push({
-            id: authUser.id,
-            full_name: authUser.user_metadata?.full_name || 'Unknown User',
-            email: authUser.email || 'Unknown Email',
-            roles: roles,
-            created_at: authUser.created_at || new Date().toISOString(),
-            last_sign_in_at: authUser.last_sign_in_at || null
-          });
         }
       });
 
-      console.log('Loaded users:', combinedUsers);
+      console.log(`Loaded ${combinedUsers.length} total users`);
       setUsers(combinedUsers);
     } catch (error) {
       console.error('Error loading users:', error);

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDiscountValidation } from '@/hooks/useDiscountValidation';
 import { usePaymentMethod } from '@/hooks/usePaymentMethod';
@@ -17,6 +17,8 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
     postal_code: '',
     country: 'Pakistan'
   });
+  const [productDiscountApplied, setProductDiscountApplied] = useState<any>(null);
+  const [productDiscountAmount, setProductDiscountAmount] = useState(0);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
@@ -24,7 +26,7 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
     discountCode,
     setDiscountCode,
     appliedDiscount,
-    discountAmount,
+    discountAmount: manualDiscountAmount,
     validateDiscount
   } = useDiscountValidation(subtotal);
 
@@ -38,10 +40,19 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
 
   const { loading, submitOrder } = useOrderSubmission();
 
-  const total = Math.max(0, subtotal - discountAmount);
+  // Use the higher discount (product-specific or manual)
+  const finalDiscountAmount = Math.max(productDiscountAmount, manualDiscountAmount);
+  const finalAppliedDiscount = finalDiscountAmount === productDiscountAmount ? productDiscountApplied : appliedDiscount;
+  
+  const total = Math.max(0, subtotal - finalDiscountAmount);
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleProductDiscountApplied = (discount: any, amount: number) => {
+    setProductDiscountApplied(discount);
+    setProductDiscountAmount(amount);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,8 +61,8 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
       cartItems,
       formData,
       subtotal,
-      discountAmount,
-      appliedDiscount,
+      finalDiscountAmount,
+      finalAppliedDiscount,
       total,
       paymentMethod,
       transactionId,
@@ -64,7 +75,7 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
     loading,
     discountCode,
     setDiscountCode,
-    appliedDiscount,
+    appliedDiscount: finalAppliedDiscount,
     paymentMethod,
     setPaymentMethod,
     transactionId,
@@ -72,10 +83,11 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
     formData,
     updateFormData,
     subtotal,
-    discountAmount,
+    discountAmount: finalDiscountAmount,
     total,
     validateDiscount,
     handleFileUpload,
-    handleSubmit
+    handleSubmit,
+    handleProductDiscountApplied
   };
 };

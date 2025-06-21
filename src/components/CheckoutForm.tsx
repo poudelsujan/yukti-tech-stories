@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import DiscountSection from '@/components/checkout/DiscountSection';
 import CustomerInfoForm from '@/components/checkout/CustomerInfoForm';
 import ShippingAddressForm from '@/components/checkout/ShippingAddressForm';
 import PaymentMethodSelector from '@/components/checkout/PaymentMethodSelector';
+import ProductDiscountHandler from '@/components/checkout/ProductDiscountHandler';
 import { CartItem } from '@/types/checkout';
 
 interface CheckoutFormProps {
@@ -33,7 +35,8 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
     total,
     validateDiscount,
     handleFileUpload,
-    handleSubmit
+    handleSubmit,
+    handleProductDiscountApplied
   } = useCheckoutForm(cartItems, onOrderComplete);
 
   if (cartItems.length === 0) {
@@ -50,6 +53,13 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Product Discount Handler */}
+      <ProductDiscountHandler 
+        cartItems={cartItems}
+        onDiscountApplied={handleProductDiscountApplied}
+        subtotal={subtotal}
+      />
+
       {/* Order Summary */}
       <OrderSummary 
         cartItems={cartItems}
