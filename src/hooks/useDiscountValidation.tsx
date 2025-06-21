@@ -72,10 +72,22 @@ export const useDiscountValidation = (subtotal: number) => {
         return;
       }
 
-      setAppliedDiscount(data);
+      // Type-cast the discount_type to match our interface
+      const typedDiscountData: DiscountCode = {
+        ...data,
+        discount_type: data.discount_type as 'percentage' | 'fixed'
+      };
+
+      setAppliedDiscount(typedDiscountData);
+      
+      // Calculate discount amount for the success message
+      const currentDiscountAmount = typedDiscountData.discount_type === 'percentage' ? 
+        (subtotal * typedDiscountData.discount_value / 100) : 
+        typedDiscountData.discount_value;
+        
       toast({
         title: "Discount Applied!",
-        description: `You saved Rs. ${discountAmount.toFixed(2)}`
+        description: `You saved Rs. ${currentDiscountAmount.toFixed(2)}`
       });
     } catch (error) {
       console.error('Error validating discount:', error);
