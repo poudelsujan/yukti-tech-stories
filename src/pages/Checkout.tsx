@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CheckoutForm from '@/components/CheckoutForm';
 import { useNavigate } from 'react-router-dom';
 import { CartItem } from '@/types/checkout';
@@ -24,7 +24,22 @@ const mockCartItems: CartItem[] = [
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const [cartItems] = useState(mockCartItems);
+  const [cartItems, setCartItems] = useState<CartItem[]>(mockCartItems);
+
+  useEffect(() => {
+    // Check for items in session storage (from product detail page)
+    const storedItems = sessionStorage.getItem('checkoutItems');
+    if (storedItems) {
+      try {
+        const items = JSON.parse(storedItems);
+        setCartItems(items);
+        // Clear the session storage after using it
+        sessionStorage.removeItem('checkoutItems');
+      } catch (error) {
+        console.error('Error parsing stored checkout items:', error);
+      }
+    }
+  }, []);
 
   const handleOrderComplete = () => {
     // Redirect to a success page or back to home

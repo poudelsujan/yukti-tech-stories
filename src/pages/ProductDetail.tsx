@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ interface Product {
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,6 +50,21 @@ const ProductDetail = () => {
     }
   };
 
+  const handleBuyNow = () => {
+    if (product) {
+      // Store the product in session storage so checkout can access it
+      const cartItem = {
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        quantity: 1,
+        image_url: product.image_url
+      };
+      sessionStorage.setItem('checkoutItems', JSON.stringify([cartItem]));
+      navigate('/checkout');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -66,9 +82,9 @@ const ProductDetail = () => {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
           <p className="text-gray-600 mb-4">Sorry, we couldn't find the product you're looking for.</p>
-          <Link to="/products">
-            <Button>Back to Products</Button>
-          </Link>
+          <Button onClick={() => navigate('/products')}>
+            Back to Products
+          </Button>
         </div>
       </div>
     );
@@ -135,12 +151,15 @@ const ProductDetail = () => {
               {/* Action Buttons */}
               <div className="space-y-4">
                 <div className="flex gap-4">
-                  <Link to="/checkout" className="flex-1">
-                    <Button className="w-full" size="lg" disabled={!product.in_stock}>
-                      <ShoppingCart className="h-5 w-5 mr-2" />
-                      {product.in_stock ? `Buy Now - Rs. ${product.price.toLocaleString()}` : 'Out of Stock'}
-                    </Button>
-                  </Link>
+                  <Button 
+                    className="flex-1" 
+                    size="lg" 
+                    disabled={!product.in_stock}
+                    onClick={handleBuyNow}
+                  >
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    {product.in_stock ? `Buy Now - Rs. ${product.price.toLocaleString()}` : 'Out of Stock'}
+                  </Button>
                 </div>
 
                 {product.daraz_link && (

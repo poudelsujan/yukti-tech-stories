@@ -20,6 +20,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/products" element={<><Header /><Products /><Footer /></>} />
               <Route path="/product/:id" element={<><Header /><ProductDetail /><Footer /></>} />
               <Route path="/contact" element={<><Header /><Contact /><Footer /></>} />
+              <Route path="/checkout" element={<><Header /><Checkout /><Footer /></>} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/profile" element={<><Header /><Profile /><Footer /></>} />
               <Route path="/admin" element={<Admin />} />
