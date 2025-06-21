@@ -2,9 +2,10 @@
 import { useState } from 'react';
 import CheckoutForm from '@/components/CheckoutForm';
 import { useNavigate } from 'react-router-dom';
+import { CartItem } from '@/types/checkout';
 
 // Mock cart data - in a real app, this would come from a cart context/state
-const mockCartItems = [
+const mockCartItems: CartItem[] = [
   {
     id: '1',
     title: 'Sample Product 1',

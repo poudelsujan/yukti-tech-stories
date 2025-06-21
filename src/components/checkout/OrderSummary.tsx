@@ -1,23 +1,15 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Percent } from 'lucide-react';
-
-interface CartItem {
-  id: string;
-  title: string;
-  price: number;
-  quantity: number;
-  image_url: string | null;
-}
+import { CartItem, DiscountCode } from '@/types/checkout';
 
 interface OrderSummaryProps {
   cartItems: CartItem[];
   subtotal: number;
   discountAmount: number;
   total: number;
-  appliedDiscount: any;
+  appliedDiscount: DiscountCode | null;
 }
 
 const OrderSummary = ({ 
