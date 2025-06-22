@@ -40,14 +40,13 @@ export const useAdminData = (isAdmin: boolean) => {
     try {
       console.log('Loading users...');
       
-      // Get all profiles
+      // Get all profiles first
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name');
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
-        return;
       }
 
       // Get user roles
@@ -59,21 +58,23 @@ export const useAdminData = (isAdmin: boolean) => {
         console.error('Error fetching user roles:', rolesError);
       }
 
-      // Get all auth users for email information
+      // Try to get auth users (this might fail in client-side code)
       let authUsers: any[] = [];
       try {
+        // This will likely fail due to RLS, but we'll try anyway
         const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
         if (!authError && authData?.users) {
           authUsers = authData.users;
-          console.log(`Found ${authUsers.length} auth users`);
+          console.log(`Successfully fetched ${authUsers.length} auth users`);
         } else {
-          console.warn('Could not fetch auth users:', authError);
+          console.warn('Could not fetch auth users via admin API:', authError);
         }
       } catch (error) {
         console.warn('Auth admin access not available:', error);
       }
 
-      // Create comprehensive user list
+      // If we couldn't get auth users, we'll work with what we have from profiles
+      // and create a more comprehensive user list
       const allUserIds = new Set<string>();
       
       // Add profile IDs
@@ -81,8 +82,14 @@ export const useAdminData = (isAdmin: boolean) => {
         profiles.forEach(profile => allUserIds.add(profile.id));
       }
       
-      // Add auth user IDs
+      // Add auth user IDs if available
       authUsers.forEach(authUser => allUserIds.add(authUser.id));
+
+      // If we have very few users from profiles, it might mean users aren't creating profiles
+      // In this case, we should inform the admin
+      if (profiles && profiles.length === 0 && authUsers.length === 0) {
+        console.log('No users found in profiles or auth. This might indicate users are not signing up or profiles are not being created.');
+      }
 
       const combinedUsers: UserProfile[] = [];
 
@@ -92,20 +99,28 @@ export const useAdminData = (isAdmin: boolean) => {
         const authUser = authUsers.find(u => u.id === userId);
         const roles = userRoles?.filter(ur => ur.user_id === userId).map(ur => ur.role) || [];
         
-        // Only include users that exist in either profiles or auth
-        if (profile || authUser) {
-          combinedUsers.push({
-            id: userId,
-            full_name: profile?.full_name || authUser?.user_metadata?.full_name || 'Unknown User',
-            email: authUser?.email || 'Email not available',
-            roles: roles,
-            created_at: authUser?.created_at || new Date().toISOString(),
-            last_sign_in_at: authUser?.last_sign_in_at || null
-          });
-        }
+        // Include all users we have data for
+        combinedUsers.push({
+          id: userId,
+          full_name: profile?.full_name || authUser?.user_metadata?.full_name || 'Unknown User',
+          email: authUser?.email || 'Email not available',
+          roles: roles,
+          created_at: authUser?.created_at || new Date().toISOString(),
+          last_sign_in_at: authUser?.last_sign_in_at || null
+        });
       });
 
+      // Sort users by creation date (newest first)
+      combinedUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
       console.log(`Loaded ${combinedUsers.length} total users`);
+      console.log('Users summary:', {
+        profilesCount: profiles?.length || 0,
+        authUsersCount: authUsers.length,
+        combinedCount: combinedUsers.length,
+        usersWithRoles: combinedUsers.filter(u => u.roles.length > 0).length
+      });
+
       setUsers(combinedUsers);
     } catch (error) {
       console.error('Error loading users:', error);
