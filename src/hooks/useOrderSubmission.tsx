@@ -12,7 +12,7 @@ export const useOrderSubmission = () => {
 
   const submitOrder = async (
     cartItems: CartItem[],
-    formData: CheckoutFormData,
+    formData: CheckoutFormData & { deliveryLocation?: { lat: number; lng: number; address: string } | null },
     subtotal: number,
     discountAmount: number,
     appliedDiscount: DiscountCode | null,
@@ -46,6 +46,7 @@ export const useOrderSubmission = () => {
           postal_code: formData.postal_code,
           country: formData.country
         },
+        delivery_location: formData.deliveryLocation || null,
         order_items: cartItems as any,
         subtotal: subtotal,
         discount_amount: discountAmount,
@@ -71,6 +72,15 @@ export const useOrderSubmission = () => {
           .update({ current_uses: appliedDiscount.current_uses + 1 })
           .eq('id', appliedDiscount.id);
       }
+
+      // Add initial order status history
+      await supabase
+        .from('order_status_history')
+        .insert({
+          order_id: data.id,
+          status: 'processing',
+          notes: 'Order placed successfully'
+        });
 
       toast({
         title: "Order Placed Successfully!",

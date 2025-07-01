@@ -11,6 +11,7 @@ import CustomerInfoForm from '@/components/checkout/CustomerInfoForm';
 import ShippingAddressForm from '@/components/checkout/ShippingAddressForm';
 import PaymentMethodSelector from '@/components/checkout/PaymentMethodSelector';
 import ProductDiscountHandler from '@/components/checkout/ProductDiscountHandler';
+import ShippingLocationSelector from '@/components/checkout/ShippingLocationSelector';
 import { CartItem } from '@/types/checkout';
 
 interface CheckoutFormProps {
@@ -36,7 +37,9 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
     validateDiscount,
     handleFileUpload,
     handleSubmit,
-    handleProductDiscountApplied
+    handleProductDiscountApplied,
+    deliveryLocation,
+    setDeliveryLocation
   } = useCheckoutForm(cartItems, onOrderComplete);
 
   if (cartItems.length === 0) {
@@ -87,6 +90,14 @@ const CheckoutForm = ({ cartItems, onOrderComplete }: CheckoutFormProps) => {
 
             {/* Shipping Address */}
             <ShippingAddressForm formData={formData} onChange={updateFormData} />
+
+            <Separator />
+
+            {/* Delivery Location Selector */}
+            <ShippingLocationSelector 
+              onLocationSelect={setDeliveryLocation}
+              selectedLocation={deliveryLocation}
+            />
 
             <Separator />
 

@@ -19,6 +19,7 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
   });
   const [productDiscountApplied, setProductDiscountApplied] = useState<any>(null);
   const [productDiscountAmount, setProductDiscountAmount] = useState(0);
+  const [deliveryLocation, setDeliveryLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
@@ -57,9 +58,16 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Include delivery location in the order
+    const orderData = {
+      ...formData,
+      deliveryLocation
+    };
+    
     await submitOrder(
       cartItems,
-      formData,
+      orderData,
       subtotal,
       finalDiscountAmount,
       finalAppliedDiscount,
@@ -88,6 +96,8 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
     validateDiscount,
     handleFileUpload,
     handleSubmit,
-    handleProductDiscountApplied
+    handleProductDiscountApplied,
+    deliveryLocation,
+    setDeliveryLocation
   };
 };

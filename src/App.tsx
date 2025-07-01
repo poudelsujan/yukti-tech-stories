@@ -21,6 +21,7 @@ import Privacy from "./pages/Privacy";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/product/:id" element={<><Header /><ProductDetail /><Footer /></>} />
               <Route path="/contact" element={<><Header /><Contact /><Footer /></>} />
               <Route path="/checkout" element={<><Header /><Checkout /><Footer /></>} />
+              <Route path="/orders" element={<Orders />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/profile" element={<><Header /><Profile /><Footer /></>} />
               <Route path="/admin" element={<Admin />} />

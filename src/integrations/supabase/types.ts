@@ -101,55 +101,114 @@ export type Database = {
         }
         Relationships: []
       }
+      order_status_history: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string
+          status: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id: string
+          status: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string
+          status?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
+          actual_delivery_date: string | null
           created_at: string
           customer_email: string
           customer_name: string
           customer_phone: string | null
+          delivery_location: Json | null
+          delivery_notes: string | null
           discount_amount: number | null
           discount_code: string | null
+          estimated_delivery: string | null
           id: string
           order_items: Json
           order_status: string | null
+          payment_method: string | null
           payment_status: string | null
           shipping_address: Json
+          shipping_cost: number | null
           subtotal: number
           total_amount: number
+          tracking_number: string | null
+          transaction_id: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          actual_delivery_date?: string | null
           created_at?: string
           customer_email: string
           customer_name: string
           customer_phone?: string | null
+          delivery_location?: Json | null
+          delivery_notes?: string | null
           discount_amount?: number | null
           discount_code?: string | null
+          estimated_delivery?: string | null
           id?: string
           order_items: Json
           order_status?: string | null
+          payment_method?: string | null
           payment_status?: string | null
           shipping_address: Json
+          shipping_cost?: number | null
           subtotal: number
           total_amount: number
+          tracking_number?: string | null
+          transaction_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          actual_delivery_date?: string | null
           created_at?: string
           customer_email?: string
           customer_name?: string
           customer_phone?: string | null
+          delivery_location?: Json | null
+          delivery_notes?: string | null
           discount_amount?: number | null
           discount_code?: string | null
+          estimated_delivery?: string | null
           id?: string
           order_items?: Json
           order_status?: string | null
+          payment_method?: string | null
           payment_status?: string | null
           shipping_address?: Json
+          shipping_cost?: number | null
           subtotal?: number
           total_amount?: number
+          tracking_number?: string | null
+          transaction_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -278,6 +337,39 @@ export type Database = {
           avatar_url?: string | null
           full_name?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      shipping_zones: {
+        Row: {
+          active: boolean | null
+          base_cost: number
+          cost_per_km: number | null
+          created_at: string
+          description: string | null
+          id: string
+          max_distance_km: number | null
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          base_cost?: number
+          cost_per_km?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_distance_km?: number | null
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          base_cost?: number
+          cost_per_km?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_distance_km?: number | null
+          name?: string
         }
         Relationships: []
       }
