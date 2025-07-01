@@ -48,7 +48,15 @@ const Orders = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      
+      // Transform the data to match our Order interface
+      const transformedOrders = data?.map(order => ({
+        ...order,
+        order_items: Array.isArray(order.order_items) ? order.order_items : 
+                    typeof order.order_items === 'string' ? JSON.parse(order.order_items) : []
+      })) || [];
+      
+      setOrders(transformedOrders);
     } catch (error: any) {
       toast({
         variant: "destructive",
