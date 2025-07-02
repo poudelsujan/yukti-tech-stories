@@ -1,150 +1,103 @@
-
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdminStatus } from '@/hooks/useAdminStatus';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X, User, LogOut, Settings, ShoppingCart, Package } from 'lucide-react';
 import MobileNavbar from './MobileNavbar';
+import CartIcon from './CartIcon';
+import CartDrawer from './CartDrawer';
 
 const Header = () => {
-  const { user, signOut } = useAuth();
-  const { isAdmin } = useAdminStatus();
-  const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 0);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
+  const { user, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
     { name: 'Home', href: '/' },
     { name: 'Products', href: '/products' },
     { name: 'Services', href: '/services' },
+    { name: 'Pre-Order', href: '/preorder' },
     { name: 'Contact', href: '/contact' },
   ];
 
-  const userInitials = user?.email ? user.email.charAt(0).toUpperCase() : 'U';
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
-    <header className={`sticky top-0 z-50 transition-all duration-300 ${
-      scrolled ? 'bg-white/95 backdrop-blur-sm shadow-md' : 'bg-white'
-    }`}>
+    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">E</span>
-            </div>
-            <span className="font-bold text-xl text-gray-900">ECommerce</span>
-          </Link>
+          <div className="flex-shrink-0">
+            <Link to="/" className="text-2xl font-bold text-primary">
+              TechStore
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className="text-gray-600 hover:text-primary transition-colors relative group"
+                className="text-gray-600 hover:text-primary transition-colors font-medium"
               >
                 {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
               </Link>
             ))}
           </nav>
 
-          {/* User Menu */}
+          {/* Right side - Cart and Auth */}
           <div className="flex items-center space-x-4">
+            {/* Cart Icon */}
+            <CartDrawer>
+              <CartIcon onClick={() => {}} />
+            </CartDrawer>
+
+            {/* Auth Section */}
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.user_metadata?.avatar_url} alt="Profile" />
-                      <AvatarFallback>{userInitials}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.user_metadata?.full_name || 'User'}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/orders" className="flex items-center">
-                      <Package className="mr-2 h-4 w-4" />
-                      My Orders
-                    </Link>
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin" className="flex items-center">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Admin Panel
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
               <div className="flex items-center space-x-2">
-                <Button asChild variant="ghost">
-                  <Link to="/auth">Sign In</Link>
-                </Button>
-                <Button asChild>
-                  <Link to="/auth">Get Started</Link>
+                <Link to="/profile">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Button>
+                </Link>
+                {user.email && (
+                  <Link to="/orders">
+                    <Button variant="ghost" size="sm">
+                      Orders
+                    </Button>
+                  </Link>
+                )}
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Logout
                 </Button>
               </div>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="sm">Sign In</Button>
+              </Link>
             )}
 
             {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setIsOpen(!isOpen)}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-md text-gray-600 hover:text-primary hover:bg-gray-100"
             >
-              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
       </div>
 
       {/* Mobile Navigation */}
-      <MobileNavbar isOpen={isOpen} setIsOpen={setIsOpen} navItems={navItems} />
+      <MobileNavbar 
+        isOpen={isMenuOpen} 
+        setIsOpen={setIsMenuOpen} 
+        navItems={navItems}
+      />
     </header>
   );
 };

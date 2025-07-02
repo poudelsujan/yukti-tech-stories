@@ -2,32 +2,16 @@
 import { useState, useEffect } from 'react';
 import CheckoutForm from '@/components/CheckoutForm';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '@/hooks/useCart';
 import { CartItem } from '@/types/checkout';
-
-// Mock cart data - in a real app, this would come from a cart context/state
-const mockCartItems: CartItem[] = [
-  {
-    id: '1',
-    title: 'Sample Product 1',
-    price: 2500,
-    quantity: 1,
-    image_url: '/placeholder.svg'
-  },
-  {
-    id: '2',
-    title: 'Sample Product 2',
-    price: 1800,
-    quantity: 2,
-    image_url: '/placeholder.svg'
-  }
-];
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<CartItem[]>(mockCartItems);
+  const { cartItems: hookCartItems, clearCart } = useCart();
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    // Check for items in session storage (from product detail page)
+    // Check for items in session storage (from product detail page) or use cart items
     const storedItems = sessionStorage.getItem('checkoutItems');
     if (storedItems) {
       try {
@@ -37,13 +21,19 @@ const Checkout = () => {
         sessionStorage.removeItem('checkoutItems');
       } catch (error) {
         console.error('Error parsing stored checkout items:', error);
+        setCartItems(hookCartItems);
       }
+    } else {
+      // Use items from cart hook
+      setCartItems(hookCartItems);
     }
-  }, []);
+  }, [hookCartItems]);
 
   const handleOrderComplete = () => {
-    // Redirect to a success page or back to home
-    navigate('/', { replace: true });
+    // Clear the cart after successful order
+    clearCart();
+    // Redirect to orders page
+    navigate('/orders', { replace: true });
   };
 
   return (

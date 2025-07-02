@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ExternalLink, ShoppingCart } from 'lucide-react';
+import { useCart } from '@/hooks/useCart';
 import CustomerReviews from '@/components/CustomerReviews';
 
 interface Product {
@@ -24,6 +24,7 @@ interface Product {
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,17 +51,28 @@ const ProductDetail = () => {
     }
   };
 
-  const handleBuyNow = () => {
+  const handleAddToCart = () => {
     if (product) {
-      // Store the product in session storage so checkout can access it
-      const cartItem = {
+      addToCart({
         id: product.id,
         title: product.title,
         price: product.price,
-        quantity: 1,
-        image_url: product.image_url
-      };
-      sessionStorage.setItem('checkoutItems', JSON.stringify([cartItem]));
+        image_url: product.image_url,
+        category: product.category
+      });
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (product) {
+      // Add to cart first, then go to checkout
+      addToCart({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image_url: product.image_url,
+        category: product.category
+      });
       navigate('/checkout');
     }
   };
@@ -155,10 +167,19 @@ const ProductDetail = () => {
                     className="flex-1" 
                     size="lg" 
                     disabled={!product.in_stock}
-                    onClick={handleBuyNow}
+                    onClick={handleAddToCart}
                   >
                     <ShoppingCart className="h-5 w-5 mr-2" />
-                    {product.in_stock ? `Buy Now - Rs. ${product.price.toLocaleString()}` : 'Out of Stock'}
+                    {product.in_stock ? 'Add to Cart' : 'Out of Stock'}
+                  </Button>
+                  <Button 
+                    className="flex-1" 
+                    size="lg" 
+                    disabled={!product.in_stock}
+                    onClick={handleBuyNow}
+                    variant="outline"
+                  >
+                    Buy Now
                   </Button>
                 </div>
 

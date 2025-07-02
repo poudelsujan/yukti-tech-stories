@@ -1,178 +1,205 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { MapPin, Navigation, Search } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MapPin, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface LocationSelectorProps {
   onLocationSelect: (location: { lat: number; lng: number; address: string }) => void;
-  initialLocation?: { lat: number; lng: number; address: string };
+  selectedLocation?: { lat: number; lng: number; address: string } | null;
 }
 
-const LocationSelector = ({ onLocationSelect, initialLocation }: LocationSelectorProps) => {
+const LocationSelector = ({ onLocationSelect, selectedLocation }: LocationSelectorProps) => {
   const { toast } = useToast();
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [address, setAddress] = useState(initialLocation?.address || '');
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const mapRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
+
+  // Default to Kathmandu, Nepal coordinates
+  const defaultLocation = { lat: 27.7172, lng: 85.3240 };
 
   useEffect(() => {
-    // Get user's current location on component mount
-    getCurrentLocation();
-  }, []);
-
-  useEffect(() => {
-    // Initialize map when Google Maps loads
-    if (window.google && mapRef.current && !map) {
-      initializeMap();
+    // Check if Google Maps is already loaded
+    if (window.google && window.google.maps) {
+      setIsGoogleMapsLoaded(true);
+      return;
     }
-  }, [currentLocation, map]);
 
-  const getCurrentLocation = () => {
-    setIsLoadingLocation(true);
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          setCurrentLocation(location);
-          reverseGeocode(location);
-          setIsLoadingLocation(false);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          toast({
-            variant: "destructive",
-            title: "Location Error",
-            description: "Could not get current location. Please enter address manually."
-          });
-          // Default to Karachi, Pakistan
-          setCurrentLocation({ lat: 24.8607, lng: 67.0011 });
-          setIsLoadingLocation(false);
-        },
-        { timeout: 10000, enableHighAccuracy: true }
-      );
-    } else {
+    // Load Google Maps API
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setIsGoogleMapsLoaded(true);
+    script.onerror = () => {
+      console.error('Failed to load Google Maps API');
       toast({
         variant: "destructive",
-        title: "Geolocation Not Supported",
-        description: "Your browser doesn't support geolocation."
+        title: "Maps Error",
+        description: "Failed to load Google Maps. Please try again later."
       });
-      setCurrentLocation({ lat: 24.8607, lng: 67.0011 });
-      setIsLoadingLocation(false);
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup script if component unmounts
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, [toast]);
+
+  useEffect(() => {
+    if (isGoogleMapsLoaded && mapRef.current && !map) {
+      initializeMap();
     }
-  };
+  }, [isGoogleMapsLoaded, map]);
 
   const initializeMap = () => {
-    if (!mapRef.current || !currentLocation) return;
+    if (!mapRef.current || !window.google) return;
 
-    const newMap = new google.maps.Map(mapRef.current, {
-      center: currentLocation,
-      zoom: 15,
+    const initialLocation = selectedLocation || defaultLocation;
+    
+    const mapInstance = new google.maps.Map(mapRef.current, {
+      center: initialLocation,
+      zoom: 13,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
     });
 
-    const newMarker = new google.maps.Marker({
-      position: currentLocation,
-      map: newMap,
+    const markerInstance = new google.maps.Marker({
+      position: initialLocation,
+      map: mapInstance,
       draggable: true,
       title: 'Delivery Location'
     });
 
-    newMarker.addListener('dragend', () => {
-      const position = newMarker.getPosition();
-      if (position) {
-        const location = { lat: position.lat(), lng: position.lng() };
-        reverseGeocode(location);
-      }
-    });
-
-    newMap.addListener('click', (event: google.maps.MapMouseEvent) => {
+    // Add click listener for map
+    mapInstance.addListener('click', (event: google.maps.MapMouseEvent) => {
       if (event.latLng) {
-        const location = { lat: event.latLng.lat(), lng: event.latLng.lng() };
-        newMarker.setPosition(location);
-        reverseGeocode(location);
+        const lat = event.latLng.lat();
+        const lng = event.latLng.lng();
+        updateMarkerPosition(lat, lng);
       }
     });
 
-    setMap(newMap);
-    setMarker(newMarker);
-  };
-
-  const reverseGeocode = async (location: { lat: number; lng: number }) => {
-    try {
-      const geocoder = new google.maps.Geocoder();
-      const response = await geocoder.geocode({
-        location: location
-      });
-
-      if (response.results && response.results[0]) {
-        const formattedAddress = response.results[0].formatted_address;
-        setAddress(formattedAddress);
-        onLocationSelect({
-          ...location,
-          address: formattedAddress
-        });
+    // Add drag listener for marker
+    markerInstance.addListener('dragend', () => {
+      const position = markerInstance.getPosition();
+      if (position) {
+        const lat = position.lat();
+        const lng = position.lng();
+        updateMarkerPosition(lat, lng);
       }
-    } catch (error) {
-      console.error('Reverse geocoding failed:', error);
-    }
+    });
+
+    setMap(mapInstance);
+    setMarker(markerInstance);
+
+    // Get current location if available
+    getCurrentLocation();
   };
 
-  const searchAddress = async () => {
-    if (!address.trim()) return;
-
-    try {
-      const geocoder = new google.maps.Geocoder();
-      const response = await geocoder.geocode({
-        address: address
-      });
-
-      if (response.results && response.results[0]) {
-        const location = response.results[0].geometry.location;
-        const newLocation = { lat: location.lat(), lng: location.lng() };
-        
-        setCurrentLocation(newLocation);
-        
-        if (map && marker) {
-          map.setCenter(newLocation);
-          marker.setPosition(newLocation);
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          updateMarkerPosition(lat, lng);
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Location Error",
+            description: "Could not get your current location. Using default location."
+          });
         }
-        
-        onLocationSelect({
-          ...newLocation,
-          address: response.results[0].formatted_address
-        });
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Search Failed",
-        description: "Could not find the specified address."
-      });
+      );
     }
   };
 
-  // Simple fallback map (if Google Maps not available)
-  const SimpleFallbackMap = () => (
-    <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-      <div className="text-center">
-        <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-        <p className="text-sm text-gray-600">Map loading...</p>
-        <p className="text-xs text-gray-500">Please enter your address manually below</p>
-      </div>
-    </div>
-  );
+  const updateMarkerPosition = async (lat: number, lng: number) => {
+    if (!marker || !map) return;
+
+    marker.setPosition({ lat, lng });
+    map.setCenter({ lat, lng });
+
+    // Get address from coordinates
+    try {
+      const address = await reverseGeocode(lat, lng);
+      onLocationSelect({ lat, lng, address });
+    } catch (error) {
+      console.error('Error getting address:', error);
+      onLocationSelect({ lat, lng, address: 'Unknown location' });
+    }
+  };
+
+  const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+    if (!window.google) throw new Error('Google Maps not loaded');
+
+    const geocoder = new google.maps.Geocoder();
+    return new Promise((resolve, reject) => {
+      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          resolve(results[0].formatted_address);
+        } else {
+          reject(new Error('Geocoding failed'));
+        }
+      });
+    });
+  };
+
+  const searchLocation = async () => {
+    if (!searchQuery.trim() || !window.google) return;
+
+    setLoading(true);
+    const geocoder = new google.maps.Geocoder();
+    
+    geocoder.geocode({ address: searchQuery }, (results, status) => {
+      setLoading(false);
+      if (status === 'OK' && results && results[0]) {
+        const location = results[0].geometry.location;
+        const lat = location.lat();
+        const lng = location.lng();
+        updateMarkerPosition(lat, lng);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Search Failed",
+          description: "Could not find the specified location."
+        });
+      }
+    });
+  };
+
+  if (!isGoogleMapsLoaded) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Loading Map...
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -183,53 +210,37 @@ const LocationSelector = ({ onLocationSelect, initialLocation }: LocationSelecto
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Map Container */}
-        <div className="w-full h-64">
-          {window.google && window.google.maps ? (
-            <div ref={mapRef} className="w-full h-full rounded-lg" />
-          ) : (
-            <SimpleFallbackMap />
-          )}
+        <div className="flex gap-2">
+          <Input
+            placeholder="Search for a location..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && searchLocation()}
+          />
+          <Button onClick={searchLocation} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
+          </Button>
+        </div>
+        
+        <div className="relative">
+          <div ref={mapRef} className="h-64 w-full rounded-md border" />
+          <Button
+            onClick={getCurrentLocation}
+            disabled={loading}
+            className="absolute top-2 right-2 z-10"
+            size="sm"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'My Location'}
+          </Button>
         </div>
 
-        {/* Controls */}
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Button
-              onClick={getCurrentLocation}
-              disabled={isLoadingLocation}
-              variant="outline"
-              size="sm"
-            >
-              <Navigation className="h-4 w-4 mr-2" />
-              {isLoadingLocation ? 'Getting Location...' : 'Use Current Location'}
-            </Button>
+        {selectedLocation && (
+          <div className="text-sm text-gray-600">
+            <p><strong>Selected Location:</strong></p>
+            <p>{selectedLocation.address}</p>
+            <p>Coordinates: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Delivery Address</Label>
-            <div className="flex gap-2">
-              <Input
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Enter delivery address"
-                onKeyPress={(e) => e.key === 'Enter' && searchAddress()}
-              />
-              <Button onClick={searchAddress} size="sm">
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {currentLocation && (
-            <div className="text-sm text-gray-600 p-2 bg-gray-50 rounded">
-              <strong>Selected Location:</strong><br />
-              Coordinates: {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}<br />
-              {address && <span>Address: {address}</span>}
-            </div>
-          )}
-        </div>
+        )}
       </CardContent>
     </Card>
   );
