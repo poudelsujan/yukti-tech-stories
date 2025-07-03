@@ -43,63 +43,51 @@ const Checkout = () => {
 
   if (isLoading) {
     return (
-      <>
-        <Header />
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading your cart...</p>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your cart...</p>
         </div>
-        <Footer />
-      </>
+      </div>
     );
   }
 
   if (cartItems.length === 0) {
     return (
-      <>
-        <Header />
-        <div className="min-h-screen bg-gray-50 py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Card>
-              <CardContent className="text-center py-12">
-                <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
-                <p className="text-gray-600 mb-6">Add some products to your cart to proceed with checkout.</p>
-                <button
-                  onClick={() => navigate('/products')}
-                  className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  Shop Now
-                </button>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card>
+            <CardContent className="text-center py-12">
+              <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
+              <p className="text-gray-600 mb-6">Add some products to your cart to proceed with checkout.</p>
+              <button
+                onClick={() => navigate('/products')}
+                className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Shop Now
+              </button>
+            </CardContent>
+          </Card>
         </div>
-        <Footer />
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
-            <p className="text-gray-600">Complete your purchase ({cartItems.length} items)</p>
-          </div>
-
-          <CheckoutForm 
-            cartItems={cartItems} 
-            onOrderComplete={handleOrderComplete}
-          />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+          <p className="text-gray-600">Complete your purchase ({cartItems.length} items)</p>
         </div>
+
+        <CheckoutForm 
+          cartItems={cartItems} 
+          onOrderComplete={handleOrderComplete}
+        />
       </div>
-      <Footer />
-    </>
+    </div>
   );
 };
 

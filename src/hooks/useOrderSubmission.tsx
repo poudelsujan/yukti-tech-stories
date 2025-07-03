@@ -45,6 +45,18 @@ export const useOrderSubmission = () => {
         setLoading(false);
         return;
       }
+
+      // Additional validation for file
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(qrScreenshot.type)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid File Type",
+          description: "Please upload a valid image file (JPEG, PNG, GIF, or WebP)."
+        });
+        setLoading(false);
+        return;
+      }
     }
 
     try {
@@ -88,6 +100,13 @@ export const useOrderSubmission = () => {
       }
 
       console.log('Order created successfully:', data);
+
+      // If QR screenshot exists, we would upload it to storage here
+      // For now, we'll just log it since storage setup would need additional configuration
+      if (qrScreenshot && data.id) {
+        console.log('QR screenshot would be uploaded for order:', data.id);
+        // TODO: Implement file upload to Supabase Storage
+      }
 
       // Update discount usage if applied
       if (appliedDiscount) {

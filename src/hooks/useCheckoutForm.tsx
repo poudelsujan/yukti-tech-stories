@@ -34,6 +34,7 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
   const {
     paymentMethod,
     setPaymentMethod,
+    qrScreenshot,
     transactionId,
     setTransactionId,
     handleFileUpload
@@ -74,7 +75,7 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
       total,
       paymentMethod,
       transactionId,
-      null, // qrScreenshot is handled internally in usePaymentMethod
+      qrScreenshot,
       onOrderComplete
     );
   };
@@ -86,6 +87,7 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
     appliedDiscount: finalAppliedDiscount,
     paymentMethod,
     setPaymentMethod,
+    qrScreenshot,
     transactionId,
     setTransactionId,
     formData,

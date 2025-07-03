@@ -25,10 +25,16 @@ export const useAdminStatus = () => {
         .select('role')
         .eq('user_id', user.id)
         .eq('role', 'admin')
-        .single();
+        .maybeSingle();
 
-      setIsAdmin(!!data && !error);
+      if (error) {
+        console.error('Error checking admin role:', error);
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(!!data);
+      }
     } catch (error) {
+      console.error('Error in checkAdminRole:', error);
       setIsAdmin(false);
     } finally {
       setLoading(false);

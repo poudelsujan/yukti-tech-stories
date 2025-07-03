@@ -1,32 +1,21 @@
 
 import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useAdminStatus } from '@/hooks/useAdminStatus';
-import { useAdminData } from '@/hooks/useAdminData';
-import AdminLayout from '@/components/admin/AdminLayout';
-import LoadingSpinner from '@/components/admin/LoadingSpinner';
-import AccessDenied from '@/components/admin/AccessDenied';
-import DashboardStats from '@/components/admin/DashboardStats';
-import AdminTabs from '@/components/admin/AdminTabs';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
+import AccessDenied from '@/components/admin/AccessDenied';
+import LoadingSpinner from '@/components/admin/LoadingSpinner';
 
 const Admin = () => {
-  const { user } = useAuth();
   const { isAdmin, loading } = useAdminStatus();
-  const { users, stats, loadUsers } = useAdminData(isAdmin);
 
   if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  if (!user) {
     return (
       <>
         <Header />
-        <AccessDenied 
-          message="Access Denied" 
-          description="Please sign in to access the admin panel" 
-        />
+        <LoadingSpinner />
+        <Footer />
       </>
     );
   }
@@ -35,10 +24,8 @@ const Admin = () => {
     return (
       <>
         <Header />
-        <AccessDenied 
-          message="Access Denied" 
-          description="You don't have permission to access this page" 
-        />
+        <AccessDenied />
+        <Footer />
       </>
     );
   }
@@ -46,14 +33,16 @@ const Admin = () => {
   return (
     <>
       <Header />
-      <AdminLayout>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Manage your e-commerce platform</p>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-2">Manage your store, orders, and customers</p>
+          </div>
+          <AdminLayout />
         </div>
-        <DashboardStats stats={stats} />
-        <AdminTabs users={users} onUserUpdate={loadUsers} />
-      </AdminLayout>
+      </div>
+      <Footer />
     </>
   );
 };
