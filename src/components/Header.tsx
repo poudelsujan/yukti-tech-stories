@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import CartIcon from './CartIcon';
 import CartDrawer from './CartDrawer';
 
 const Header = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
@@ -20,7 +21,7 @@ const Header = () => {
   ];
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
   };
 
   return (

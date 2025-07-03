@@ -24,11 +24,8 @@ declare namespace google {
     }
 
     class Geocoder {
-      geocode(request: GeocoderRequest): Promise<GeocoderResponse>;
-    }
-
-    class NavigationControl {
-      constructor(opts?: NavigationControlOptions);
+      constructor();
+      geocode(request: GeocoderRequest, callback: (results: GeocoderResult[] | null, status: GeocoderStatus) => void): void;
     }
 
     interface MapOptions {
@@ -61,10 +58,6 @@ declare namespace google {
       address?: string;
     }
 
-    interface GeocoderResponse {
-      results: GeocoderResult[];
-    }
-
     interface GeocoderResult {
       formatted_address: string;
       geometry: {
@@ -72,9 +65,7 @@ declare namespace google {
       };
     }
 
-    interface NavigationControlOptions {
-      visualizePitch?: boolean;
-    }
+    type GeocoderStatus = 'OK' | 'ZERO_RESULTS' | 'OVER_QUERY_LIMIT' | 'REQUEST_DENIED' | 'INVALID_REQUEST' | 'UNKNOWN_ERROR';
 
     interface MapMouseEvent {
       latLng: LatLng | null;

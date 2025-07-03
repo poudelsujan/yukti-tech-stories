@@ -9,9 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 interface LocationSelectorProps {
   onLocationSelect: (location: { lat: number; lng: number; address: string }) => void;
   selectedLocation?: { lat: number; lng: number; address: string } | null;
+  initialLocation?: { lat: number; lng: number; address: string } | null;
 }
 
-const LocationSelector = ({ onLocationSelect, selectedLocation }: LocationSelectorProps) => {
+const LocationSelector = ({ onLocationSelect, selectedLocation, initialLocation }: LocationSelectorProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,10 +64,10 @@ const LocationSelector = ({ onLocationSelect, selectedLocation }: LocationSelect
   const initializeMap = () => {
     if (!mapRef.current || !window.google) return;
 
-    const initialLocation = selectedLocation || defaultLocation;
+    const mapLocation = initialLocation || selectedLocation || defaultLocation;
     
     const mapInstance = new google.maps.Map(mapRef.current, {
-      center: initialLocation,
+      center: mapLocation,
       zoom: 13,
       mapTypeControl: false,
       streetViewControl: false,
@@ -74,7 +75,7 @@ const LocationSelector = ({ onLocationSelect, selectedLocation }: LocationSelect
     });
 
     const markerInstance = new google.maps.Marker({
-      position: initialLocation,
+      position: mapLocation,
       map: mapInstance,
       draggable: true,
       title: 'Delivery Location'
@@ -102,8 +103,10 @@ const LocationSelector = ({ onLocationSelect, selectedLocation }: LocationSelect
     setMap(mapInstance);
     setMarker(markerInstance);
 
-    // Get current location if available
-    getCurrentLocation();
+    // Get current location if available and no initial location provided
+    if (!initialLocation && !selectedLocation) {
+      getCurrentLocation();
+    }
   };
 
   const getCurrentLocation = () => {
@@ -234,11 +237,11 @@ const LocationSelector = ({ onLocationSelect, selectedLocation }: LocationSelect
           </Button>
         </div>
 
-        {selectedLocation && (
+        {(selectedLocation || initialLocation) && (
           <div className="text-sm text-gray-600">
             <p><strong>Selected Location:</strong></p>
-            <p>{selectedLocation.address}</p>
-            <p>Coordinates: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+            <p>{(selectedLocation || initialLocation)?.address}</p>
+            <p>Coordinates: {(selectedLocation || initialLocation)?.lat.toFixed(6)}, {(selectedLocation || initialLocation)?.lng.toFixed(6)}</p>
           </div>
         )}
       </CardContent>
