@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/admin/LoadingSpinner';
 import AccessDenied from '@/components/admin/AccessDenied';
 import DashboardStats from '@/components/admin/DashboardStats';
 import AdminTabs from '@/components/admin/AdminTabs';
+import Header from '@/components/Header';
 
 const Admin = () => {
   const { user } = useAuth();
@@ -20,27 +21,40 @@ const Admin = () => {
 
   if (!user) {
     return (
-      <AccessDenied 
-        message="Access Denied" 
-        description="Please sign in to access the admin panel" 
-      />
+      <>
+        <Header />
+        <AccessDenied 
+          message="Access Denied" 
+          description="Please sign in to access the admin panel" 
+        />
+      </>
     );
   }
 
   if (!isAdmin) {
     return (
-      <AccessDenied 
-        message="Access Denied" 
-        description="You don't have permission to access this page" 
-      />
+      <>
+        <Header />
+        <AccessDenied 
+          message="Access Denied" 
+          description="You don't have permission to access this page" 
+        />
+      </>
     );
   }
 
   return (
-    <AdminLayout>
-      <DashboardStats stats={stats} />
-      <AdminTabs users={users} onUserUpdate={loadUsers} />
-    </AdminLayout>
+    <>
+      <Header />
+      <AdminLayout>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-2">Manage your e-commerce platform</p>
+        </div>
+        <DashboardStats stats={stats} />
+        <AdminTabs users={users} onUserUpdate={loadUsers} />
+      </AdminLayout>
+    </>
   );
 };
 

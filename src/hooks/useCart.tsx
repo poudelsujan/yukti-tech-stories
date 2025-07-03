@@ -23,19 +23,24 @@ export const useCart = () => {
     const savedCart = localStorage.getItem('shopping_cart');
     if (savedCart) {
       try {
-        setCartItems(JSON.parse(savedCart));
+        const parsed = JSON.parse(savedCart);
+        console.log('Loading cart from localStorage:', parsed);
+        setCartItems(parsed);
       } catch (error) {
         console.error('Error loading cart from localStorage:', error);
+        localStorage.removeItem('shopping_cart'); // Clear corrupted data
       }
     }
   }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
+    console.log('Saving cart to localStorage:', cartItems);
     localStorage.setItem('shopping_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
+    console.log('Adding item to cart:', item);
     setCartItems(prevItems => {
       const existingItem = prevItems.find(cartItem => cartItem.id === item.id);
       
@@ -94,6 +99,7 @@ export const useCart = () => {
 
   const clearCart = () => {
     setCartItems([]);
+    localStorage.removeItem('shopping_cart');
     toast({
       title: "Cart Cleared",
       description: "All items have been removed from your cart"
@@ -101,7 +107,9 @@ export const useCart = () => {
   };
 
   const getTotalItems = () => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
+    const total = cartItems.reduce((total, item) => total + item.quantity, 0);
+    console.log('Total items in cart:', total);
+    return total;
   };
 
   const getTotalPrice = () => {

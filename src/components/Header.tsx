@@ -2,15 +2,17 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, X, User, LogOut, ShoppingBag, UserCircle } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Menu, X, User, LogOut, ShoppingBag, UserCircle, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import MobileNavbar from './MobileNavbar';
 import CartIcon from './CartIcon';
 import CartDrawer from './CartDrawer';
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdminStatus();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
@@ -50,7 +52,7 @@ const Header = () => {
           </nav>
 
           {/* Right side - Cart and Auth */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Cart Icon */}
             <CartDrawer>
               <CartIcon onClick={() => {}} />
@@ -60,9 +62,9 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 px-2 sm:px-3">
                     <UserCircle className="h-4 w-4" />
-                    <span className="hidden sm:inline">{user.email?.split('@')[0]}</span>
+                    <span className="hidden sm:inline text-sm">{user.email?.split('@')[0]}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-white">
@@ -78,6 +80,18 @@ const Header = () => {
                       My Orders
                     </Link>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="flex items-center gap-2 w-full">
+                          <Settings className="h-4 w-4" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Logout

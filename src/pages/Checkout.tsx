@@ -1,5 +1,7 @@
 
 import { useState, useEffect } from 'react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import CheckoutForm from '@/components/CheckoutForm';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
@@ -16,15 +18,18 @@ const Checkout = () => {
     if (storedItems) {
       try {
         const items = JSON.parse(storedItems);
+        console.log('Using stored checkout items:', items);
         setCartItems(items);
         // Clear the session storage after using it
         sessionStorage.removeItem('checkoutItems');
       } catch (error) {
         console.error('Error parsing stored checkout items:', error);
+        console.log('Falling back to cart items:', hookCartItems);
         setCartItems(hookCartItems);
       }
     } else {
       // Use items from cart hook
+      console.log('Using cart items:', hookCartItems);
       setCartItems(hookCartItems);
     }
   }, [hookCartItems]);
@@ -37,19 +42,23 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-gray-600">Complete your purchase</p>
-        </div>
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+            <p className="text-gray-600">Complete your purchase</p>
+          </div>
 
-        <CheckoutForm 
-          cartItems={cartItems} 
-          onOrderComplete={handleOrderComplete}
-        />
+          <CheckoutForm 
+            cartItems={cartItems} 
+            onOrderComplete={handleOrderComplete}
+          />
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 };
 

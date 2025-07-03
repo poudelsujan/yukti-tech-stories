@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +29,7 @@ interface Order {
 
 interface PreOrder {
   id: string;
+  user_id: string;
   item_name: string;
   product_link: string;
   category: string;
@@ -67,7 +67,6 @@ const Orders = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our Order interface
       const transformedOrders = data?.map(order => ({
         ...order,
         order_items: Array.isArray(order.order_items) ? order.order_items : 
