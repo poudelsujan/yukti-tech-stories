@@ -17,27 +17,41 @@ export interface CartItem {
 export const useCart = () => {
   const { toast } = useToast();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load cart from localStorage on component mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('shopping_cart');
-    if (savedCart) {
+    const loadCart = () => {
       try {
-        const parsed = JSON.parse(savedCart);
-        console.log('Loading cart from localStorage:', parsed);
-        setCartItems(parsed);
+        const savedCart = localStorage.getItem('shopping_cart');
+        console.log('Loading cart from localStorage:', savedCart);
+        if (savedCart) {
+          const parsed = JSON.parse(savedCart);
+          console.log('Parsed cart data:', parsed);
+          setCartItems(Array.isArray(parsed) ? parsed : []);
+        } else {
+          console.log('No cart data found in localStorage');
+          setCartItems([]);
+        }
       } catch (error) {
         console.error('Error loading cart from localStorage:', error);
-        localStorage.removeItem('shopping_cart'); // Clear corrupted data
+        localStorage.removeItem('shopping_cart');
+        setCartItems([]);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+
+    loadCart();
   }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    console.log('Saving cart to localStorage:', cartItems);
-    localStorage.setItem('shopping_cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (!isLoading) {
+      console.log('Saving cart to localStorage:', cartItems);
+      localStorage.setItem('shopping_cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, isLoading]);
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     console.log('Adding item to cart:', item);
@@ -45,25 +59,26 @@ export const useCart = () => {
       const existingItem = prevItems.find(cartItem => cartItem.id === item.id);
       
       if (existingItem) {
-        // Update quantity if item already exists
         const updatedItems = prevItems.map(cartItem =>
           cartItem.id === item.id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
             : cartItem
         );
+        console.log('Updated cart items:', updatedItems);
         toast({
           title: "Cart Updated",
           description: `${item.title} quantity increased to ${existingItem.quantity + 1}`
         });
         return updatedItems;
       } else {
-        // Add new item to cart
         const newItem = { ...item, quantity: 1 };
+        const updatedItems = [...prevItems, newItem];
+        console.log('New cart items:', updatedItems);
         toast({
           title: "Added to Cart",
           description: `${item.title} has been added to your cart`
         });
-        return [...prevItems, newItem];
+        return updatedItems;
       }
     });
   };
@@ -108,7 +123,7 @@ export const useCart = () => {
 
   const getTotalItems = () => {
     const total = cartItems.reduce((total, item) => total + item.quantity, 0);
-    console.log('Total items in cart:', total);
+    console.log('Total items in cart:', total, 'Cart items:', cartItems);
     return total;
   };
 
@@ -123,6 +138,7 @@ export const useCart = () => {
     updateQuantity,
     clearCart,
     getTotalItems,
-    getTotalPrice
+    getTotalPrice,
+    isLoading
   };
 };

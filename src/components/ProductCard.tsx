@@ -3,8 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, ExternalLink } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, ExternalLink, Zap } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 
 interface Product {
@@ -25,6 +25,7 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,6 +38,27 @@ const ProductCard = ({ product }: ProductCardProps) => {
       image_url: product.image,
       category: product.category
     });
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Create a temporary checkout item
+    const checkoutItem = {
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image_url: product.image,
+      category: product.category,
+      quantity: 1
+    };
+    
+    // Store in session storage for checkout
+    sessionStorage.setItem('checkoutItems', JSON.stringify([checkoutItem]));
+    
+    // Navigate to checkout
+    navigate('/checkout');
   };
 
   return (
@@ -92,14 +114,26 @@ const ProductCard = ({ product }: ProductCardProps) => {
         )}
 
         <div className="space-y-2">
-          <Button 
-            className="w-full" 
-            disabled={!product.in_stock}
-            onClick={handleAddToCart}
-          >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            {product.in_stock ? 'Add to Cart' : 'Out of Stock'}
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button 
+              variant="outline"
+              size="sm"
+              disabled={!product.in_stock}
+              onClick={handleAddToCart}
+            >
+              <ShoppingCart className="h-4 w-4 mr-1" />
+              Add to Cart
+            </Button>
+            
+            <Button 
+              size="sm"
+              disabled={!product.in_stock}
+              onClick={handleBuyNow}
+            >
+              <Zap className="h-4 w-4 mr-1" />
+              Buy Now
+            </Button>
+          </div>
           
           {product.daraz_link && (
             <a 
@@ -110,6 +144,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             >
               <Button 
                 variant="outline" 
+                size="sm"
                 className="w-full border-orange-500 text-orange-600 hover:bg-orange-50"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
