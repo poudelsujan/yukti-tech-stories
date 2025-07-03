@@ -24,17 +24,34 @@ export const useOrderSubmission = () => {
   ) => {
     setLoading(true);
 
-    if (paymentMethod === 'qr' && (!qrScreenshot || !transactionId)) {
-      toast({
-        variant: "destructive",
-        title: "Missing Payment Information",
-        description: "Please upload QR payment screenshot and enter transaction ID."
-      });
-      setLoading(false);
-      return;
+    // Enhanced validation for QR payment
+    if (paymentMethod === 'qr') {
+      if (!transactionId.trim()) {
+        toast({
+          variant: "destructive",
+          title: "Missing Transaction ID",
+          description: "Please enter the transaction ID from your payment."
+        });
+        setLoading(false);
+        return;
+      }
+      
+      if (!qrScreenshot) {
+        toast({
+          variant: "destructive",
+          title: "Missing Payment Screenshot",
+          description: "Please upload a screenshot of your QR payment."
+        });
+        setLoading(false);
+        return;
+      }
     }
 
     try {
+      console.log('Submitting order with payment method:', paymentMethod);
+      console.log('Transaction ID:', transactionId);
+      console.log('QR Screenshot:', qrScreenshot?.name);
+
       const orderData = {
         user_id: user?.id || null,
         customer_name: formData.customer_name,
@@ -57,13 +74,20 @@ export const useOrderSubmission = () => {
         payment_status: paymentMethod === 'qr' ? 'pending_verification' : 'pending'
       };
 
+      console.log('Order data prepared:', orderData);
+
       const { data, error } = await supabase
         .from('orders')
         .insert(orderData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Order created successfully:', data);
 
       // Update discount usage if applied
       if (appliedDiscount) {
@@ -89,6 +113,7 @@ export const useOrderSubmission = () => {
 
       onOrderComplete();
     } catch (error: any) {
+      console.error('Order submission error:', error);
       toast({
         variant: "destructive",
         title: "Order Failed",

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, ExternalLink, Zap } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface Product {
   id: string;
@@ -25,11 +27,23 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please sign in to add items to cart."
+      });
+      navigate('/auth');
+      return;
+    }
     
     addToCart({
       id: product.id,
@@ -43,6 +57,16 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please sign in to purchase items."
+      });
+      navigate('/auth');
+      return;
+    }
     
     // Create a temporary checkout item
     const checkoutItem = {
@@ -114,26 +138,39 @@ const ProductCard = ({ product }: ProductCardProps) => {
         )}
 
         <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
+          {user && (
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                disabled={!product.in_stock}
+                onClick={handleAddToCart}
+              >
+                <ShoppingCart className="h-4 w-4 mr-1" />
+                Add to Cart
+              </Button>
+              
+              <Button 
+                size="sm"
+                disabled={!product.in_stock}
+                onClick={handleBuyNow}
+              >
+                <Zap className="h-4 w-4 mr-1" />
+                Buy Now
+              </Button>
+            </div>
+          )}
+          
+          {!user && (
             <Button 
-              variant="outline"
+              variant="outline" 
               size="sm"
-              disabled={!product.in_stock}
-              onClick={handleAddToCart}
+              className="w-full"
+              onClick={() => navigate('/auth')}
             >
-              <ShoppingCart className="h-4 w-4 mr-1" />
-              Add to Cart
+              Sign in to Purchase
             </Button>
-            
-            <Button 
-              size="sm"
-              disabled={!product.in_stock}
-              onClick={handleBuyNow}
-            >
-              <Zap className="h-4 w-4 mr-1" />
-              Buy Now
-            </Button>
-          </div>
+          )}
           
           {product.daraz_link && (
             <a 

@@ -11,11 +11,14 @@ import { ExternalLink, Package, CheckCircle, XCircle, Clock, CreditCard } from '
 interface PreOrderQuoteProps {
   preOrder: {
     id: string;
-    item_name: string;
-    product_link: string;
-    category: string;
-    original_price: number;
-    quantity: number;
+    item_name?: string;
+    items?: any[];
+    product_link?: string;
+    category?: string;
+    original_price?: number;
+    quantity?: number;
+    total_items?: number;
+    total_value_usd?: number;
     estimated_cost_npr: number | null;
     status: string;
     quoted_price?: number;
@@ -61,6 +64,16 @@ const PreOrderQuote = ({ preOrder, onQuoteAction, isUser = false }: PreOrderQuot
 
   const handleAcceptQuote = () => {
     const installmentPlan = calculateInstallmentPlan();
+    
+    // Update status in localStorage
+    const existingOrders = JSON.parse(localStorage.getItem('preOrders') || '[]');
+    const updatedOrders = existingOrders.map((order: any) => 
+      order.id === preOrder.id 
+        ? { ...order, status: 'quote_accepted', installment_plan: installmentPlan }
+        : order
+    );
+    localStorage.setItem('preOrders', JSON.stringify(updatedOrders));
+    
     onQuoteAction('accept', installmentPlan);
     toast({
       title: "Quote Accepted",
@@ -69,6 +82,15 @@ const PreOrderQuote = ({ preOrder, onQuoteAction, isUser = false }: PreOrderQuot
   };
 
   const handleRejectQuote = () => {
+    // Update status in localStorage
+    const existingOrders = JSON.parse(localStorage.getItem('preOrders') || '[]');
+    const updatedOrders = existingOrders.map((order: any) => 
+      order.id === preOrder.id 
+        ? { ...order, status: 'quote_rejected' }
+        : order
+    );
+    localStorage.setItem('preOrders', JSON.stringify(updatedOrders));
+    
     onQuoteAction('reject');
     toast({
       title: "Quote Rejected",
@@ -92,20 +114,25 @@ const PreOrderQuote = ({ preOrder, onQuoteAction, isUser = false }: PreOrderQuot
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <h4 className="font-medium mb-2">Product Details</h4>
+            <h4 className="font-medium mb-2">Order Details</h4>
             <div className="space-y-2 text-sm">
-              <p><strong>Product:</strong> {preOrder.item_name}</p>
-              <p><strong>Category:</strong> {preOrder.category}</p>
-              <p><strong>Quantity:</strong> {preOrder.quantity}</p>
-              <p><strong>Original Price:</strong> ${preOrder.original_price}</p>
-              <a 
-                href={preOrder.product_link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline inline-flex items-center gap-1"
-              >
-                View Product <ExternalLink className="h-3 w-3" />
-              </a>
+              {preOrder.items ? (
+                <>
+                  <p><strong>Items:</strong> {preOrder.items.length} products</p>
+                  <p><strong>Total Quantity:</strong> {preOrder.total_items}</p>
+                  <p><strong>Total Value:</strong> ${preOrder.total_value_usd?.toFixed(2)}</p>
+                </>
+              ) : (
+                <>
+                  <p><strong>Product:</strong> {preOrder.item_name}</p>
+                  <p><strong>Category:</strong> {preOrder.category}</p>
+                  <p><strong>Quantity:</strong> {preOrder.quantity}</p>
+                  <p><strong>Original Price:</strong> ${preOrder.original_price}</p>
+                </>
+              )}
+              <p className="text-xs text-gray-500">
+                Request created on {new Date(preOrder.created_at).toLocaleDateString()}
+              </p>
             </div>
           </div>
 
@@ -118,18 +145,40 @@ const PreOrderQuote = ({ preOrder, onQuoteAction, isUser = false }: PreOrderQuot
                   <p><strong>Notes:</strong> {preOrder.admin_notes}</p>
                 )}
                 <p className="text-xs text-gray-500">
-                  Quote generated on {new Date(preOrder.created_at).toLocaleDateString()}
+                  Quote valid for 7 days
                 </p>
               </div>
             </div>
           )}
         </div>
 
+        {preOrder.items && preOrder.items.length > 0 && (
+          <div>
+            <h4 className="font-medium mb-2">Items List</h4>
+            <div className="space-y-2">
+              {preOrder.items.map((item: any, index: number) => (
+                <div key={index} className="text-sm bg-gray-50 p-3 rounded border-l-4 border-blue-500">
+                  <p className="font-medium">{item.item_name}</p>
+                  <p>Category: {item.category} | Price: ${item.original_price} × {item.quantity}</p>
+                  <a 
+                    href={item.product_link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                  >
+                    View Product <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {preOrder.status === 'quoted' && preOrder.quoted_price && isUser && (
           <div className="border-t pt-4">
             <h4 className="font-medium mb-4 flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
-              Installment Plan
+              Payment Plan (Post-Delivery Installments)
             </h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -149,7 +198,7 @@ const PreOrderQuote = ({ preOrder, onQuoteAction, isUser = false }: PreOrderQuot
               </div>
               
               <div>
-                <Label htmlFor="installmentMonths">Installment Months</Label>
+                <Label htmlFor="installmentMonths">Installment Months (After Delivery)</Label>
                 <Input
                   id="installmentMonths"
                   type="number"
@@ -159,19 +208,22 @@ const PreOrderQuote = ({ preOrder, onQuoteAction, isUser = false }: PreOrderQuot
                   max={12}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  2-12 months available
+                  2-12 months after delivery
                 </p>
               </div>
             </div>
 
             {installmentPlan && (
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <h5 className="font-medium mb-2">Payment Breakdown</h5>
+              <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                <h5 className="font-medium mb-2">Payment Structure</h5>
                 <div className="space-y-1 text-sm">
-                  <p>Total Price: Rs. {installmentPlan.totalPrice.toLocaleString()}</p>
-                  <p>Down Payment: Rs. {installmentPlan.downPayment.toLocaleString()}</p>
-                  <p>Remaining Amount: Rs. {installmentPlan.remainingAmount.toLocaleString()}</p>
-                  <p>Monthly Payment: Rs. {installmentPlan.monthlyPayment.toLocaleString()} × {installmentPlan.installmentMonths} months</p>
+                  <p><strong>Total Price:</strong> Rs. {installmentPlan.totalPrice.toLocaleString()}</p>
+                  <p><strong>Down Payment (Before Order):</strong> Rs. {installmentPlan.downPayment.toLocaleString()}</p>
+                  <p><strong>Remaining Balance:</strong> Rs. {installmentPlan.remainingAmount.toLocaleString()}</p>
+                  <p><strong>Monthly Payment (After Delivery):</strong> Rs. {installmentPlan.monthlyPayment.toLocaleString()} × {installmentPlan.installmentMonths} months</p>
+                  <p className="text-blue-700 text-xs mt-2">
+                    * Installment payments will begin after successful delivery
+                  </p>
                 </div>
               </div>
             )}
@@ -179,7 +231,7 @@ const PreOrderQuote = ({ preOrder, onQuoteAction, isUser = false }: PreOrderQuot
             <div className="flex gap-2">
               <Button onClick={handleAcceptQuote} className="flex-1">
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Accept Quote & Proceed
+                Accept Quote & Payment Plan
               </Button>
               <Button onClick={handleRejectQuote} variant="outline">
                 <XCircle className="h-4 w-4 mr-2" />
@@ -193,7 +245,7 @@ const PreOrderQuote = ({ preOrder, onQuoteAction, isUser = false }: PreOrderQuot
           <div className="bg-green-50 p-4 rounded-lg">
             <p className="text-green-800 font-medium">Quote Accepted!</p>
             <p className="text-green-700 text-sm mt-1">
-              Your quote has been accepted. We will contact you for payment processing.
+              Your quote has been accepted. We will contact you for down payment processing.
             </p>
           </div>
         )}

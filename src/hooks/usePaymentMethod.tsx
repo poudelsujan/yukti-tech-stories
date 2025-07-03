@@ -10,7 +10,13 @@ export const usePaymentMethod = () => {
     const file = e.target.files?.[0];
     if (file) {
       setQrScreenshot(file);
+      console.log('QR Screenshot uploaded:', file.name);
     }
+  };
+
+  const resetPaymentData = () => {
+    setQrScreenshot(null);
+    setTransactionId('');
   };
 
   return {
@@ -19,6 +25,7 @@ export const usePaymentMethod = () => {
     qrScreenshot,
     transactionId,
     setTransactionId,
-    handleFileUpload
+    handleFileUpload,
+    resetPaymentData
   };
 };
