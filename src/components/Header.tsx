@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Menu, X, User, LogOut, ShoppingBag, UserCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import MobileNavbar from './MobileNavbar';
 import CartIcon from './CartIcon';
@@ -57,25 +58,32 @@ const Header = () => {
 
             {/* Auth Section */}
             {user ? (
-              <div className="flex items-center space-x-2">
-                <Link to="/profile">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Profile
+                    <UserCircle className="h-4 w-4" />
+                    <span className="hidden sm:inline">{user.email?.split('@')[0]}</span>
                   </Button>
-                </Link>
-                {user.email && (
-                  <Link to="/orders">
-                    <Button variant="ghost" size="sm">
-                      Orders
-                    </Button>
-                  </Link>
-                )}
-                <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center gap-2 w-full">
+                      <User className="h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders" className="flex items-center gap-2 w-full">
+                      <ShoppingBag className="h-4 w-4" />
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link to="/auth">
                 <Button variant="outline" size="sm">Sign In</Button>

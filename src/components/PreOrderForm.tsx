@@ -71,19 +71,18 @@ const PreOrderForm = () => {
     setCalculating(true);
     
     // Simulate cost calculation based on category and price
-    // In a real implementation, this would call an API or use more complex logic
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     const basePrice = formData.original_price * formData.quantity;
     
     // Category-based cost multipliers for Nepal import
     const categoryMultipliers: Record<string, number> = {
-      'Electronics': 1.8, // Higher due to import duties and handling
+      'Electronics': 1.8,
       'Clothing & Fashion': 1.5,
       'Home & Garden': 1.6,
       'Sports & Outdoors': 1.7,
-      'Health & Beauty': 1.9, // Higher due to regulations
-      'Automotive': 2.2, // Highest due to strict import rules
+      'Health & Beauty': 1.9,
+      'Automotive': 2.2,
       'Industrial Equipment': 2.0,
       'Toys & Games': 1.4,
       'Books & Media': 1.3,
@@ -91,16 +90,10 @@ const PreOrderForm = () => {
     };
 
     const multiplier = categoryMultipliers[formData.category] || 1.6;
-    
-    // Add shipping and handling costs (estimated 15-25% of product value)
     const shippingRate = 0.2;
-    
-    // Calculate final estimated cost in NPR
     const estimatedUSD = basePrice * multiplier;
     const shippingCost = basePrice * shippingRate;
     const totalUSD = estimatedUSD + shippingCost;
-    
-    // Convert to NPR (approximate rate: 1 USD = 133 NPR)
     const exchangeRate = 133;
     const totalNPR = Math.round(totalUSD * exchangeRate);
 
@@ -113,13 +106,31 @@ const PreOrderForm = () => {
     });
   };
 
+  const generatePreOrderId = () => {
+    const timestamp = Date.now().toString();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `PO-${timestamp.slice(-6)}${random}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please sign in to submit a pre-order request."
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const preOrderId = generatePreOrderId();
       const preOrderData = {
-        user_id: user?.id || null,
+        id: preOrderId,
+        user_id: user.id,
         item_name: formData.item_name,
         product_link: formData.product_link,
         category: formData.category,
@@ -134,15 +145,14 @@ const PreOrderForm = () => {
         created_at: new Date().toISOString()
       };
 
-      // For now, we'll store this in localStorage since we don't have the pre_orders table yet
+      // Store in localStorage for now (since we don't have the pre_orders table yet)
       const existingOrders = JSON.parse(localStorage.getItem('preOrders') || '[]');
-      const newOrder = { id: Date.now().toString(), ...preOrderData };
-      existingOrders.push(newOrder);
+      existingOrders.push(preOrderData);
       localStorage.setItem('preOrders', JSON.stringify(existingOrders));
 
       toast({
         title: "Pre-order Request Submitted!",
-        description: "We'll contact you with a detailed quote within 24 hours."
+        description: `Your pre-order ID: ${preOrderId}. We'll contact you with a detailed quote within 24 hours.`
       });
 
       // Reset form
@@ -169,6 +179,24 @@ const PreOrderForm = () => {
       setLoading(false);
     }
   };
+
+  if (!user) {
+    return (
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Authentication Required</CardTitle>
+          <CardDescription>
+            Please sign in to submit a pre-order request.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild>
+            <a href="/auth">Sign In</a>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="max-w-2xl mx-auto">

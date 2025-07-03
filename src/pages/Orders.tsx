@@ -5,10 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Package, MapPin, Clock, Truck, Phone, Mail } from 'lucide-react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Package, ShoppingBag, FileText, Eye, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface Order {
   id: string;
@@ -27,15 +28,32 @@ interface Order {
   delivery_location: any;
 }
 
+interface PreOrder {
+  id: string;
+  item_name: string;
+  product_link: string;
+  category: string;
+  original_price: number;
+  quantity: number;
+  status: string;
+  created_at: string;
+  quoted_price?: number;
+  admin_notes?: string;
+}
+
 const Orders = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [preOrders, setPreOrders] = useState<PreOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedPreOrder, setSelectedPreOrder] = useState<PreOrder | null>(null);
 
   useEffect(() => {
     if (user) {
       loadOrders();
+      loadPreOrders();
     }
   }, [user]);
 
@@ -63,6 +81,22 @@ const Orders = () => {
         title: "Error",
         description: "Failed to load orders"
       });
+    }
+  };
+
+  const loadPreOrders = () => {
+    try {
+      const allPreOrders = JSON.parse(localStorage.getItem('preOrders') || '[]');
+      const userPreOrders = allPreOrders.filter((order: PreOrder) => 
+        order.user_id === user?.id
+      );
+      setPreOrders(userPreOrders);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load pre-orders"
+      });
     } finally {
       setLoading(false);
     }
@@ -76,186 +110,272 @@ const Orders = () => {
       case 'out_for_delivery': return 'bg-orange-100 text-orange-800';
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'pending_verification': return 'bg-orange-100 text-orange-800';
-      case 'failed': return 'bg-red-100 text-red-800';
+      case 'pending_quote': return 'bg-yellow-100 text-yellow-800';
+      case 'quoted': return 'bg-blue-100 text-blue-800';
+      case 'ordered': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   if (!user) {
     return (
-      <>
-        <Header />
-        <div className="min-h-screen bg-gray-50 py-8">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Card>
-              <CardContent className="text-center py-8">
-                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Please sign in</h3>
-                <p className="text-gray-600">You need to be signed in to view your orders.</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-        <Footer />
-      </>
+      <div className="min-h-screen flex items-center justify-center">
+        <Card>
+          <CardHeader>
+            <CardTitle>Please Sign In</CardTitle>
+            <CardDescription>You need to be signed in to view your orders</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <a href="/auth">Sign In</a>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div>Loading your orders...</div>
+      </div>
     );
   }
 
   return (
-    <>
-      <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-            <p className="text-gray-600">Track your order status and delivery information</p>
-          </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
+          <p className="text-gray-600 mt-2">Track your orders and pre-order requests</p>
+        </div>
 
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-lg">Loading your orders...</div>
-            </div>
-          ) : orders.length === 0 ? (
+        <Tabs defaultValue="orders" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4" />
+              Regular Orders ({orders.length})
+            </TabsTrigger>
+            <TabsTrigger value="preorders" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Pre-Orders ({preOrders.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="orders">
             <Card>
-              <CardContent className="text-center py-8">
-                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-                <p className="text-gray-600">You haven't placed any orders yet.</p>
-                <Button className="mt-4" onClick={() => window.location.href = '/products'}>
-                  Browse Products
-                </Button>
+              <CardHeader>
+                <CardTitle>Regular Orders</CardTitle>
+                <CardDescription>Your completed and pending orders</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {orders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+                    <p className="text-gray-600 mb-4">Start shopping to see your orders here</p>
+                    <Button asChild>
+                      <a href="/products">Browse Products</a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order ID</TableHead>
+                          <TableHead>Items</TableHead>
+                          <TableHead>Total</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell className="font-mono text-sm">
+                              #{order.id.slice(0, 8)}
+                            </TableCell>
+                            <TableCell>
+                              {order.order_items?.length || 0} items
+                            </TableCell>
+                            <TableCell>Rs. {order.total_amount.toLocaleString()}</TableCell>
+                            <TableCell>
+                              <Badge className={getStatusColor(order.order_status)}>
+                                {order.order_status?.replace('_', ' ')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => setSelectedOrder(order)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl">
+                                  <DialogHeader>
+                                    <DialogTitle>Order Details - #{order.id.slice(0, 8)}</DialogTitle>
+                                  </DialogHeader>
+                                  {selectedOrder && (
+                                    <div className="space-y-4">
+                                      <div>
+                                        <h4 className="font-medium mb-2">Order Items</h4>
+                                        <div className="space-y-2">
+                                          {selectedOrder.order_items?.map((item: any, index: number) => (
+                                            <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                              <span>{item.title} x {item.quantity}</span>
+                                              <span>Rs. {(item.price * item.quantity).toLocaleString()}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                      {selectedOrder.tracking_number && (
+                                        <div>
+                                          <h4 className="font-medium mb-2">Tracking Information</h4>
+                                          <p className="text-sm">Tracking Number: {selectedOrder.tracking_number}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          ) : (
-            <div className="space-y-6">
-              {orders.map((order) => (
-                <Card key={order.id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <Package className="h-5 w-5" />
-                          Order #{order.id.slice(0, 8)}
-                        </CardTitle>
-                        <CardDescription>
-                          Placed on {new Date(order.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </CardDescription>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-semibold">Rs. {order.total_amount.toLocaleString()}</div>
-                        <div className="flex gap-2 mt-1">
-                          <Badge className={getStatusColor(order.order_status)}>
-                            {order.order_status?.replace('_', ' ')}
-                          </Badge>
-                          <Badge className={getPaymentStatusColor(order.payment_status)}>
-                            {order.payment_status?.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Order Items */}
-                      <div>
-                        <h4 className="font-medium mb-3">Order Items</h4>
-                        <div className="space-y-2">
-                          {order.order_items?.map((item: any, index: number) => (
-                            <div key={index} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
-                              <img 
-                                src={item.image_url || '/placeholder.svg'} 
-                                alt={item.title}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium">{item.title}</div>
-                                <div className="text-sm text-gray-600">Qty: {item.quantity}</div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-medium">Rs. {(item.price * item.quantity).toLocaleString()}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+          </TabsContent>
 
-                      {/* Delivery Information */}
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-medium mb-2 flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
-                            Delivery Address
-                          </h4>
-                          <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                            {order.shipping_address?.address}<br />
-                            {order.shipping_address?.city}, {order.shipping_address?.postal_code}<br />
-                            {order.shipping_address?.country}
-                          </div>
-                        </div>
-
-                        {order.tracking_number && (
-                          <div>
-                            <h4 className="font-medium mb-2 flex items-center gap-2">
-                              <Truck className="h-4 w-4" />
-                              Tracking Information
-                            </h4>
-                            <div className="text-sm bg-blue-50 p-3 rounded">
-                              <div className="font-mono">{order.tracking_number}</div>
-                            </div>
-                          </div>
-                        )}
-
-                        {order.estimated_delivery && (
-                          <div>
-                            <h4 className="font-medium mb-2 flex items-center gap-2">
-                              <Clock className="h-4 w-4" />
-                              Estimated Delivery
-                            </h4>
-                            <div className="text-sm text-gray-600">
-                              {new Date(order.estimated_delivery).toLocaleDateString()}
-                            </div>
-                          </div>
-                        )}
-
-                        <div>
-                          <h4 className="font-medium mb-2">Contact Information</h4>
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-4 w-4" />
-                              {order.customer_email}
-                            </div>
-                            {order.customer_phone && (
-                              <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4" />
-                                {order.customer_phone}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+          <TabsContent value="preorders">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pre-Orders</CardTitle>
+                <CardDescription>Your international pre-order requests</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {preOrders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No pre-orders yet</h3>
+                    <p className="text-gray-600 mb-4">Submit a pre-order request to import products internationally</p>
+                    <Button asChild>
+                      <a href="/preorder">Submit Pre-Order</a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Pre-Order ID</TableHead>
+                          <TableHead>Product</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Original Price</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {preOrders.map((preOrder) => (
+                          <TableRow key={preOrder.id}>
+                            <TableCell className="font-mono text-sm">
+                              {preOrder.id}
+                            </TableCell>
+                            <TableCell>
+                              <div className="max-w-32 truncate">{preOrder.item_name}</div>
+                            </TableCell>
+                            <TableCell>{preOrder.category}</TableCell>
+                            <TableCell>${preOrder.original_price} x {preOrder.quantity}</TableCell>
+                            <TableCell>
+                              <Badge className={getStatusColor(preOrder.status)}>
+                                {preOrder.status?.replace('_', ' ')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(preOrder.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => setSelectedPreOrder(preOrder)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl">
+                                  <DialogHeader>
+                                    <DialogTitle>Pre-Order Details - {preOrder.id}</DialogTitle>
+                                  </DialogHeader>
+                                  {selectedPreOrder && (
+                                    <div className="space-y-4">
+                                      <div>
+                                        <h4 className="font-medium mb-2">Product Information</h4>
+                                        <div className="space-y-2 text-sm">
+                                          <div><strong>Product:</strong> {selectedPreOrder.item_name}</div>
+                                          <div><strong>Category:</strong> {selectedPreOrder.category}</div>
+                                          <div><strong>Original Price:</strong> ${selectedPreOrder.original_price}</div>
+                                          <div><strong>Quantity:</strong> {selectedPreOrder.quantity}</div>
+                                          <div>
+                                            <strong>Product Link:</strong>
+                                            <a 
+                                              href={selectedPreOrder.product_link} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="ml-2 text-blue-600 hover:underline inline-flex items-center gap-1"
+                                            >
+                                              View Product <ExternalLink className="h-3 w-3" />
+                                            </a>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      {selectedPreOrder.quoted_price && (
+                                        <div>
+                                          <h4 className="font-medium mb-2">Quote Information</h4>
+                                          <p className="text-sm">
+                                            <strong>Quoted Price:</strong> Rs. {selectedPreOrder.quoted_price.toLocaleString()}
+                                          </p>
+                                        </div>
+                                      )}
+                                      {selectedPreOrder.admin_notes && (
+                                        <div>
+                                          <h4 className="font-medium mb-2">Notes</h4>
+                                          <p className="text-sm">{selectedPreOrder.admin_notes}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-      <Footer />
-    </>
+    </div>
   );
 };
 

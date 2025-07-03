@@ -2,11 +2,12 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Users, Package, Percent, ShoppingCart } from 'lucide-react';
+import { Settings, Users, Package, Percent, ShoppingCart, FileText } from 'lucide-react';
 import ProductManagement from '@/components/ProductManagement';
 import UserManagement from '@/components/UserManagement';
 import DiscountManager from '@/components/DiscountManager';
 import OrderManagement from '@/components/admin/OrderManagement';
+import PreOrderManagement from '@/components/admin/PreOrderManagement';
 
 interface UserProfile {
   id: string;
@@ -25,10 +26,14 @@ interface AdminTabsProps {
 const AdminTabs = ({ users, onUserUpdate }: AdminTabsProps) => {
   return (
     <Tabs defaultValue="orders" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-6">
         <TabsTrigger value="orders" className="flex items-center gap-2">
           <ShoppingCart className="h-4 w-4" />
           Orders
+        </TabsTrigger>
+        <TabsTrigger value="preorders" className="flex items-center gap-2">
+          <FileText className="h-4 w-4" />
+          Pre-Orders
         </TabsTrigger>
         <TabsTrigger value="products" className="flex items-center gap-2">
           <Package className="h-4 w-4" />
@@ -50,6 +55,10 @@ const AdminTabs = ({ users, onUserUpdate }: AdminTabsProps) => {
 
       <TabsContent value="orders">
         <OrderManagement />
+      </TabsContent>
+
+      <TabsContent value="preorders">
+        <PreOrderManagement />
       </TabsContent>
 
       <TabsContent value="products">
