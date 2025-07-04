@@ -2,15 +2,17 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import AdminLayout from '@/components/admin/AdminLayout';
+import AdminTabs from '@/components/admin/AdminTabs';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
+import { useAdminData } from '@/hooks/useAdminData';
 import AccessDenied from '@/components/admin/AccessDenied';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
 
 const Admin = () => {
   const { isAdmin, loading } = useAdminStatus();
+  const { users, loading: usersLoading, refetch } = useAdminData();
 
-  if (loading) {
+  if (loading || usersLoading) {
     return (
       <>
         <Header />
@@ -42,11 +44,7 @@ const Admin = () => {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-2">Manage your store, orders, and customers</p>
           </div>
-          <AdminLayout>
-            <div className="p-4">
-              <p className="text-gray-600">Welcome to the admin dashboard. Use the tabs above to navigate between different sections.</p>
-            </div>
-          </AdminLayout>
+          <AdminTabs users={users} onUserUpdate={refetch} />
         </div>
       </div>
       <Footer />
