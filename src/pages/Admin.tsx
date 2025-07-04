@@ -10,9 +10,9 @@ import LoadingSpinner from '@/components/admin/LoadingSpinner';
 
 const Admin = () => {
   const { isAdmin, loading } = useAdminStatus();
-  const { users, loading: usersLoading, refetch } = useAdminData();
+  const { users, loadUsers } = useAdminData(isAdmin);
 
-  if (loading || usersLoading) {
+  if (loading) {
     return (
       <>
         <Header />
@@ -44,7 +44,7 @@ const Admin = () => {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-2">Manage your store, orders, and customers</p>
           </div>
-          <AdminTabs users={users} onUserUpdate={refetch} />
+          <AdminTabs users={users} onUserUpdate={loadUsers} />
         </div>
       </div>
       <Footer />
