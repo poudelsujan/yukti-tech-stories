@@ -24,7 +24,10 @@ const Admin = () => {
     return (
       <>
         <Header />
-        <AccessDenied />
+        <AccessDenied 
+          message="Access Denied"
+          description="You don't have permission to access the admin dashboard."
+        />
         <Footer />
       </>
     );
@@ -39,7 +42,11 @@ const Admin = () => {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-2">Manage your store, orders, and customers</p>
           </div>
-          <AdminLayout />
+          <AdminLayout>
+            <div className="p-4">
+              <p className="text-gray-600">Welcome to the admin dashboard. Use the tabs above to navigate between different sections.</p>
+            </div>
+          </AdminLayout>
         </div>
       </div>
       <Footer />
