@@ -10,8 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit, Trash2, Upload, Image, Package, ExternalLink } from 'lucide-react';
+import { Plus, Edit, Trash2, Image, Package, ExternalLink } from 'lucide-react';
 import SampleDataLoader from './SampleDataLoader';
+import ProductSearch from './admin/ProductSearch';
 
 interface Product {
   id: string;
@@ -24,6 +25,7 @@ interface Product {
   tags: string[] | null;
   trending: boolean | null;
   in_stock: boolean | null;
+  stock_quantity: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +39,7 @@ interface Category {
 const ProductManagement = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [discountCodes, setDiscountCodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,6 +47,13 @@ const ProductManagement = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([]);
+  
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [stockFilter, setStockFilter] = useState('all');
+  const [trendingFilter, setTrendingFilter] = useState('all');
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -52,7 +62,8 @@ const ProductManagement = () => {
     daraz_link: '',
     tags: '',
     trending: false,
-    in_stock: true
+    in_stock: true,
+    stock_quantity: ''
   });
 
   useEffect(() => {
@@ -60,6 +71,60 @@ const ProductManagement = () => {
     loadCategories();
     loadDiscountCodes();
   }, []);
+
+  useEffect(() => {
+    filterProducts();
+  }, [products, searchTerm, categoryFilter, stockFilter, trendingFilter]);
+
+  const filterProducts = () => {
+    let filtered = products;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Category filter
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(product => product.category === categoryFilter);
+    }
+
+    // Stock filter
+    if (stockFilter !== 'all') {
+      switch (stockFilter) {
+        case 'in_stock':
+          filtered = filtered.filter(product => product.in_stock && (product.stock_quantity || 0) > 0);
+          break;
+        case 'out_of_stock':
+          filtered = filtered.filter(product => !product.in_stock || (product.stock_quantity || 0) === 0);
+          break;
+        case 'low_stock':
+          filtered = filtered.filter(product => (product.stock_quantity || 0) <= 10 && (product.stock_quantity || 0) > 0);
+          break;
+      }
+    }
+
+    // Trending filter
+    if (trendingFilter !== 'all') {
+      filtered = filtered.filter(product => 
+        trendingFilter === 'trending' ? product.trending : !product.trending
+      );
+    }
+
+    setFilteredProducts(filtered);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+    setStockFilter('all');
+    setTrendingFilter('all');
+  };
 
   const loadProducts = async () => {
     try {
@@ -202,7 +267,8 @@ const ProductManagement = () => {
         daraz_link: formData.daraz_link || null,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
         trending: formData.trending,
-        in_stock: formData.in_stock
+        in_stock: formData.in_stock,
+        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : null
       };
 
       let productId: string;
@@ -263,7 +329,8 @@ const ProductManagement = () => {
       daraz_link: product.daraz_link || '',
       tags: product.tags?.join(', ') || '',
       trending: product.trending || false,
-      in_stock: product.in_stock !== false
+      in_stock: product.in_stock !== false,
+      stock_quantity: product.stock_quantity?.toString() || ''
     });
     await loadProductDiscounts(product.id);
     setShowAddForm(true);
@@ -304,7 +371,8 @@ const ProductManagement = () => {
       daraz_link: '',
       tags: '',
       trending: false,
-      in_stock: true
+      in_stock: true,
+      stock_quantity: ''
     });
     setEditingProduct(null);
     setShowAddForm(false);
@@ -330,6 +398,20 @@ const ProductManagement = () => {
       {products.length === 0 && (
         <SampleDataLoader />
       )}
+
+      {/* Search and Filters */}
+      <ProductSearch
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+        stockFilter={stockFilter}
+        setStockFilter={setStockFilter}
+        trendingFilter={trendingFilter}
+        setTrendingFilter={setTrendingFilter}
+        categories={categories}
+        onClearFilters={clearFilters}
+      />
 
       {/* Add/Edit Form */}
       {showAddForm && (
@@ -379,6 +461,18 @@ const ProductManagement = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="stock_quantity">Stock Quantity</Label>
+                  <Input
+                    id="stock_quantity"
+                    type="number"
+                    min="0"
+                    value={formData.stock_quantity}
+                    onChange={(e) => setFormData({...formData, stock_quantity: e.target.value})}
+                    placeholder="Enter stock quantity"
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -490,14 +584,19 @@ const ProductManagement = () => {
       {/* Products Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Products ({products.length})</CardTitle>
+          <CardTitle>Products ({filteredProducts.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {products.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="text-center py-8">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
-              <p className="text-gray-600 mb-4">Get started by adding some sample products or create your own.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+              <p className="text-gray-600 mb-4">
+                {products.length === 0 
+                  ? "Get started by adding some sample products or create your own."
+                  : "Try adjusting your search or filters."
+                }
+              </p>
             </div>
           ) : (
             <Table>
@@ -507,13 +606,14 @@ const ProductManagement = () => {
                   <TableHead>Title</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
                   <TableHead>External Links</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
                       {product.image_url ? (
@@ -527,6 +627,16 @@ const ProductManagement = () => {
                     <TableCell className="font-medium">{product.title}</TableCell>
                     <TableCell>{product.category}</TableCell>
                     <TableCell>Rs. {product.price.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm">
+                          {product.stock_quantity !== null ? `${product.stock_quantity} units` : 'Not set'}
+                        </span>
+                        {product.stock_quantity !== null && product.stock_quantity <= 10 && product.stock_quantity > 0 && (
+                          <Badge variant="destructive" className="text-xs">Low Stock</Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {product.daraz_link && (
                         <a 
