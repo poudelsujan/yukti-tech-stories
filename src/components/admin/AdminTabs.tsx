@@ -2,12 +2,13 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Users, Package, Percent, ShoppingCart, FileText } from 'lucide-react';
+import { Settings, Users, Package, Percent, ShoppingCart, FileText, BarChart3 } from 'lucide-react';
 import ProductManagement from '@/components/ProductManagement';
 import UserManagement from '@/components/UserManagement';
 import DiscountManager from '@/components/DiscountManager';
-import OrderManagement from '@/components/admin/OrderManagement';
+import EnhancedOrderManagement from '@/components/admin/EnhancedOrderManagement';
 import PreOrderManagement from '@/components/admin/PreOrderManagement';
+import DashboardOverview from '@/components/admin/DashboardOverview';
 
 interface UserProfile {
   id: string;
@@ -21,12 +22,25 @@ interface UserProfile {
 interface AdminTabsProps {
   users: UserProfile[];
   onUserUpdate: () => void;
+  dashboardStats: {
+    totalUsers: number;
+    totalProducts: number;
+    totalOrders: number;
+    totalRevenue: number;
+    activeDiscounts: number;
+    pendingOrders: number;
+    pendingPayments: number;
+  };
 }
 
-const AdminTabs = ({ users, onUserUpdate }: AdminTabsProps) => {
+const AdminTabs = ({ users, onUserUpdate, dashboardStats }: AdminTabsProps) => {
   return (
-    <Tabs defaultValue="orders" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-6">
+    <Tabs defaultValue="overview" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-7">
+        <TabsTrigger value="overview" className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" />
+          Overview
+        </TabsTrigger>
         <TabsTrigger value="orders" className="flex items-center gap-2">
           <ShoppingCart className="h-4 w-4" />
           Orders
@@ -53,8 +67,12 @@ const AdminTabs = ({ users, onUserUpdate }: AdminTabsProps) => {
         </TabsTrigger>
       </TabsList>
 
+      <TabsContent value="overview">
+        <DashboardOverview stats={dashboardStats} />
+      </TabsContent>
+
       <TabsContent value="orders">
-        <OrderManagement />
+        <EnhancedOrderManagement />
       </TabsContent>
 
       <TabsContent value="preorders">

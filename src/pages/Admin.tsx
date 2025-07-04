@@ -5,14 +5,16 @@ import Footer from '@/components/Footer';
 import AdminTabs from '@/components/admin/AdminTabs';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { useAdminData } from '@/hooks/useAdminData';
+import { useAdminDashboard } from '@/hooks/useAdminDashboard';
 import AccessDenied from '@/components/admin/AccessDenied';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
 
 const Admin = () => {
   const { isAdmin, loading } = useAdminStatus();
   const { users, loadUsers } = useAdminData(isAdmin);
+  const { stats, loading: statsLoading } = useAdminDashboard(isAdmin);
 
-  if (loading) {
+  if (loading || statsLoading) {
     return (
       <>
         <Header />
@@ -44,7 +46,11 @@ const Admin = () => {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-2">Manage your store, orders, and customers</p>
           </div>
-          <AdminTabs users={users} onUserUpdate={loadUsers} />
+          <AdminTabs 
+            users={users} 
+            onUserUpdate={loadUsers} 
+            dashboardStats={stats}
+          />
         </div>
       </div>
       <Footer />

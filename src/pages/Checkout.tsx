@@ -3,14 +3,17 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CheckoutForm from '@/components/CheckoutForm';
+import SignInPrompt from '@/components/auth/SignInPrompt';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
 import { CartItem } from '@/types/checkout';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingCart } from 'lucide-react';
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { cartItems: hookCartItems, clearCart, isLoading } = useCart();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
@@ -40,6 +43,16 @@ const Checkout = () => {
     clearCart();
     navigate('/orders', { replace: true });
   };
+
+  // Show sign-in prompt if user is not authenticated
+  if (!user) {
+    return (
+      <SignInPrompt 
+        message="Sign In Required"
+        description="Please sign in to continue with your purchase and track your orders."
+      />
+    );
+  }
 
   if (isLoading) {
     return (
