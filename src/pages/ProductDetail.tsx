@@ -81,7 +81,7 @@ const ProductDetail = () => {
 
     if (!product.in_stock || (product.stock_quantity !== null && product.stock_quantity <= 0)) {
       toast({
-        variant: "destructive",
+        variant: "destructive",  
         title: "Out of Stock",
         description: "This product is currently out of stock"
       });
