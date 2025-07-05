@@ -52,7 +52,7 @@ const Header = () => {
           </nav>
 
           {/* Right side - Cart and Auth */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-3">
             {/* Cart Icon */}
             <CartDrawer>
               <CartIcon onClick={() => {}} />
@@ -62,9 +62,11 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2 px-2 sm:px-3">
-                    <UserCircle className="h-4 w-4" />
-                    <span className="hidden sm:inline text-sm">{user.email?.split('@')[0]}</span>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-2 px-1 sm:px-3 h-9">
+                    <UserCircle className="h-5 w-5" />
+                    <span className="hidden sm:inline text-sm font-medium truncate max-w-20">
+                      {user.email?.split('@')[0]}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-white">
@@ -100,14 +102,16 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <Link to="/auth">
-                <Button variant="outline" size="sm">Sign In</Button>
+                <Button variant="outline" size="sm" className="text-sm px-3 py-2 h-9 font-medium">
+                  Sign In
+                </Button>
               </Link>
             )}
 
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-md text-gray-600 hover:text-primary hover:bg-gray-100"
+              className="md:hidden p-2 rounded-md text-gray-600 hover:text-primary hover:bg-gray-100 transition-colors"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>

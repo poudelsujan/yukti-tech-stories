@@ -16,9 +16,9 @@ interface Product {
   category: string;
   image: string;
   trending?: boolean;
-  specs?: Record<string, string>;
   daraz_link?: string;
   in_stock?: boolean;
+  description?: string;
 }
 
 interface ProductCardProps {
@@ -86,7 +86,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+    <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-full flex flex-col">
       <Link to={`/product/${product.id}`}>
         <div className="relative overflow-hidden">
           <img 
@@ -107,7 +107,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </Link>
 
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 flex-grow">
         <div className="flex justify-between items-start mb-2">
           <Badge variant="outline" className="text-xs">
             {product.category}
@@ -121,22 +121,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
             {product.title}
           </Link>
         </CardTitle>
+        {product.description && (
+          <CardDescription className="text-sm text-gray-600 line-clamp-2">
+            {product.description}
+          </CardDescription>
+        )}
       </CardHeader>
 
-      <CardContent className="pt-0">
-        {product.specs && Object.keys(product.specs).length > 0 && (
-          <div className="mb-4">
-            <ul className="text-sm text-gray-600 space-y-1">
-              {Object.entries(product.specs).slice(0, 3).map(([key, value]) => (
-                <li key={key} className="flex justify-between">
-                  <span className="font-medium">{key}:</span>
-                  <span>{value}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
+      <CardContent className="pt-0 mt-auto">
         <div className="space-y-2">
           {user && (
             <div className="grid grid-cols-2 gap-2">

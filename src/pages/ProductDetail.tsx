@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Heart, Share2, Star, ExternalLink, User } from 'lucide-react';
+import { ShoppingCart, ExternalLink, User } from 'lucide-react';
 import CustomerReviews from '@/components/CustomerReviews';
 
 interface Product {
@@ -339,17 +340,6 @@ const ProductDetail = () => {
                     Buy on Daraz
                   </Button>
                 )}
-
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Add to Wishlist
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share
-                  </Button>
-                </div>
               </div>
             </div>
           </div>
