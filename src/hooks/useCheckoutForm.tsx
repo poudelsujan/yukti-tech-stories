@@ -15,7 +15,7 @@ export const useCheckoutForm = (cartItems: CartItem[], onOrderComplete: () => vo
     address: '',
     city: '',
     postal_code: '',
-    country: 'Pakistan'
+    country: 'Nepal'
   });
   const [productDiscountApplied, setProductDiscountApplied] = useState<any>(null);
   const [productDiscountAmount, setProductDiscountAmount] = useState(0);

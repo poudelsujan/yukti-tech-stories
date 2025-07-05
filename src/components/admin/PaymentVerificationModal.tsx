@@ -24,7 +24,7 @@ const PaymentVerificationModal = ({ order, isOpen, onClose, onVerificationComple
       const { error } = await supabase
         .from('orders')
         .update({ 
-          payment_status: approve ? 'paid' : 'failed',
+          payment_status: approve ? 'completed' : 'failed',
           order_status: approve ? 'confirmed' : 'cancelled'
         })
         .eq('id', order.id);
@@ -48,10 +48,11 @@ const PaymentVerificationModal = ({ order, isOpen, onClose, onVerificationComple
       onVerificationComplete();
       onClose();
     } catch (error: any) {
+      console.error('Payment verification error:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update payment status"
+        description: error.message || "Failed to update payment status"
       });
     } finally {
       setIsVerifying(false);
