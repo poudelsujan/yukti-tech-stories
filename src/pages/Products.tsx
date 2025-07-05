@@ -108,11 +108,7 @@ const Products = () => {
       
       const formattedProducts = data?.map(product => ({
         ...product,
-        image: product.image_url || '/placeholder.svg',
-        specs: product.tags?.reduce((acc, tag, index) => {
-          acc[`Feature ${index + 1}`] = tag;
-          return acc;
-        }, {} as Record<string, string>) || {}
+        image: product.image_url || '/placeholder.svg'
       })) || [];
 
       setProducts(formattedProducts);
@@ -385,11 +381,7 @@ const Products = () => {
                   key={product.id}
                   product={{
                     ...product,
-                    image: product.image_url || '/placeholder.svg',
-                    specs: product.tags?.reduce((acc, tag, index) => {
-                      acc[`Feature ${index + 1}`] = tag;
-                      return acc;
-                    }, {} as Record<string, string>) || {}
+                    image: product.image_url || '/placeholder.svg'
                   }}
                 />
               ))}
