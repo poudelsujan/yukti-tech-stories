@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -97,13 +96,15 @@ const ProductDetail = () => {
       return;
     }
 
-    addToCart({
-      id: product.id,
-      title: product.title,
-      price: product.price,
-      image_url: product.image_url,
-      quantity: quantity
-    });
+    // Add to cart multiple times based on quantity
+    for (let i = 0; i < quantity; i++) {
+      addToCart({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image_url: product.image_url
+      });
+    }
 
     toast({
       title: "Added to Cart",
