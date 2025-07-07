@@ -171,7 +171,7 @@ const EnhancedOrderManagement = () => {
       const { error } = await supabase
         .from('orders')
         .update({ 
-          payment_status: approve ? 'paid' : 'failed',
+          payment_status: approve ? 'completed' : 'failed',
           order_status: approve ? 'confirmed' : 'cancelled'
         })
         .eq('id', orderId);
@@ -217,10 +217,11 @@ const EnhancedOrderManagement = () => {
 
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-green-100 text-green-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'pending_verification': return 'bg-orange-100 text-orange-800';
       case 'failed': return 'bg-red-100 text-red-800';
+      case 'refunded': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -279,8 +280,9 @@ const EnhancedOrderManagement = () => {
               <SelectItem value="all">All Payments</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="pending_verification">Needs Verification</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="refunded">Refunded</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -465,7 +467,7 @@ const EnhancedOrderManagement = () => {
                                       </SelectTrigger>
                                       <SelectContent>
                                         <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="paid">Paid</SelectItem>
+                                        <SelectItem value="completed">Completed</SelectItem>
                                         <SelectItem value="failed">Failed</SelectItem>
                                         <SelectItem value="refunded">Refunded</SelectItem>
                                       </SelectContent>
