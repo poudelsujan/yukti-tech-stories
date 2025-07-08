@@ -20,6 +20,7 @@ export const useOrderSubmission = () => {
     paymentMethod: string,
     transactionId: string,
     qrScreenshot: File | null,
+    qrScreenshotUrl: string | null,
     onOrderComplete: () => void
   ) => {
     setLoading(true);
@@ -36,23 +37,11 @@ export const useOrderSubmission = () => {
         return;
       }
       
-      if (!qrScreenshot) {
+      if (!qrScreenshot || !qrScreenshotUrl) {
         toast({
           variant: "destructive",
           title: "Missing Payment Screenshot",
           description: "Please upload a screenshot of your QR payment."
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Additional validation for file
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-      if (!validTypes.includes(qrScreenshot.type)) {
-        toast({
-          variant: "destructive",
-          title: "Invalid File Type",
-          description: "Please upload a valid image file (JPEG, PNG, GIF, or WebP)."
         });
         setLoading(false);
         return;
@@ -62,7 +51,7 @@ export const useOrderSubmission = () => {
     try {
       console.log('Submitting order with payment method:', paymentMethod);
       console.log('Transaction ID:', transactionId);
-      console.log('QR Screenshot:', qrScreenshot?.name);
+      console.log('QR Screenshot URL:', qrScreenshotUrl);
 
       const orderData = {
         user_id: user?.id || null,
@@ -83,6 +72,7 @@ export const useOrderSubmission = () => {
         total_amount: total,
         payment_method: paymentMethod,
         transaction_id: transactionId || null,
+        qr_screenshot_url: qrScreenshotUrl || null,
         payment_status: paymentMethod === 'qr' ? 'pending_verification' : 'pending'
       };
 
@@ -101,13 +91,6 @@ export const useOrderSubmission = () => {
 
       console.log('Order created successfully:', data);
 
-      // If QR screenshot exists, we would upload it to storage here
-      // For now, we'll just log it since storage setup would need additional configuration
-      if (qrScreenshot && data.id) {
-        console.log('QR screenshot would be uploaded for order:', data.id);
-        // TODO: Implement file upload to Supabase Storage
-      }
-
       // Update discount usage if applied
       if (appliedDiscount) {
         await supabase
@@ -123,6 +106,17 @@ export const useOrderSubmission = () => {
           order_id: data.id,
           status: 'processing',
           notes: 'Order placed successfully'
+        });
+
+      // Create admin notification for new order
+      await supabase
+        .from('admin_notifications')
+        .insert({
+          title: 'New Order Received',
+          message: `New order #${data.id.slice(0, 8)} from ${formData.customer_name} - Rs. ${total.toLocaleString()}`,
+          type: 'info',
+          related_id: data.id,
+          related_type: 'order'
         });
 
       toast({

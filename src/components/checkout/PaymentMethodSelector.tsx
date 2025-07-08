@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { QrCode, Users } from 'lucide-react';
+import { QrCode, Users, Upload, CheckCircle, Loader2 } from 'lucide-react';
 
 interface PaymentMethodSelectorProps {
   paymentMethod: string;
@@ -12,6 +12,8 @@ interface PaymentMethodSelectorProps {
   transactionId: string;
   setTransactionId: (id: string) => void;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  qrScreenshotUrl?: string | null;
+  uploading?: boolean;
 }
 
 const PaymentMethodSelector = ({ 
@@ -19,7 +21,9 @@ const PaymentMethodSelector = ({
   setPaymentMethod, 
   transactionId, 
   setTransactionId, 
-  onFileUpload 
+  onFileUpload,
+  qrScreenshotUrl,
+  uploading = false
 }: PaymentMethodSelectorProps) => {
   return (
     <div className="space-y-4">
@@ -64,14 +68,42 @@ const PaymentMethodSelector = ({
 
             <div className="space-y-2">
               <Label htmlFor="qr_screenshot">Upload Payment Screenshot</Label>
-              <Input
-                id="qr_screenshot"
-                type="file"
-                accept="image/*"
-                onChange={onFileUpload}
-                required={paymentMethod === 'qr'}
-              />
-              <p className="text-xs text-gray-500">Upload a screenshot of your successful payment</p>
+              <div className="relative">
+                <Input
+                  id="qr_screenshot"
+                  type="file"
+                  accept="image/*"
+                  onChange={onFileUpload}
+                  required={paymentMethod === 'qr'}
+                  disabled={uploading}
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {uploading && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  </div>
+                )}
+                {qrScreenshotUrl && !uploading && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  </div>
+                )}
+              </div>
+              
+              {qrScreenshotUrl && (
+                <div className="mt-2">
+                  <img 
+                    src={qrScreenshotUrl} 
+                    alt="Payment Screenshot" 
+                    className="max-w-32 h-20 object-cover rounded border"
+                  />
+                  <p className="text-xs text-green-600 mt-1">Screenshot uploaded successfully</p>
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-500">
+                {uploading ? 'Uploading and compressing image...' : 'Upload a screenshot of your successful payment (max 5MB)'}
+              </p>
             </div>
           </div>
         </Card>
