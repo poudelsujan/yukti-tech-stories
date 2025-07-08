@@ -404,6 +404,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_admin_notification: {
+        Args: {
+          p_title: string
+          p_message: string
+          p_type?: string
+          p_related_id?: string
+          p_related_type?: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _user_id: string
