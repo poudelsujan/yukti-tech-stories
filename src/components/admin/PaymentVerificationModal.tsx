@@ -41,16 +41,18 @@ const PaymentVerificationModal = ({ order, isOpen, onClose, onVerificationComple
           notes: `Payment ${approve ? 'verified and approved' : 'rejected'} by admin`
         });
 
-      // Create notification
-      await supabase
-        .from('admin_notifications')
-        .insert({
-          title: `Payment ${approve ? 'Approved' : 'Rejected'}`,
-          message: `Order #${order.id.slice(0, 8)} payment has been ${approve ? 'approved' : 'rejected'}`,
-          type: approve ? 'success' : 'warning',
-          related_id: order.id,
-          related_type: 'order'
+      // Create notification using raw SQL to avoid type issues
+      try {
+        await supabase.rpc('create_admin_notification', {
+          p_title: `Payment ${approve ? 'Approved' : 'Rejected'}`,
+          p_message: `Order #${order.id.slice(0, 8)} payment has been ${approve ? 'approved' : 'rejected'}`,
+          p_type: approve ? 'success' : 'warning',
+          p_related_id: order.id,
+          p_related_type: 'order'
         });
+      } catch (notificationError) {
+        console.warn('Failed to create admin notification:', notificationError);
+      }
 
       toast({
         title: "Success",

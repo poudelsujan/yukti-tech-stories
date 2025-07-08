@@ -108,16 +108,19 @@ export const useOrderSubmission = () => {
           notes: 'Order placed successfully'
         });
 
-      // Create admin notification for new order
-      await supabase
-        .from('admin_notifications')
-        .insert({
-          title: 'New Order Received',
-          message: `New order #${data.id.slice(0, 8)} from ${formData.customer_name} - Rs. ${total.toLocaleString()}`,
-          type: 'info',
-          related_id: data.id,
-          related_type: 'order'
+      // Create admin notification using raw SQL to avoid type issues
+      try {
+        await supabase.rpc('create_admin_notification', {
+          p_title: 'New Order Received',
+          p_message: `New order #${data.id.slice(0, 8)} from ${formData.customer_name} - Rs. ${total.toLocaleString()}`,
+          p_type: 'info',
+          p_related_id: data.id,
+          p_related_type: 'order'
         });
+      } catch (notificationError) {
+        console.warn('Failed to create admin notification:', notificationError);
+        // Don't fail the order if notification fails
+      }
 
       toast({
         title: "Order Placed Successfully!",
