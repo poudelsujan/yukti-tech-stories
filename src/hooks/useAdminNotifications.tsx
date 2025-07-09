@@ -33,7 +33,7 @@ export const useAdminNotifications = () => {
       // Type guard to ensure data is in the expected format
       const validNotifications = (data || []).filter((item: any) => 
         item && typeof item === 'object' && 'id' in item && 'title' in item && 'message' in item
-      ) as AdminNotification[];
+      ) as unknown as AdminNotification[];
 
       setNotifications(validNotifications);
       setUnreadCount(validNotifications.filter(n => !n.read).length);
