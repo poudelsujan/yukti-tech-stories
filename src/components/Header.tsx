@@ -75,7 +75,7 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-white">
-                  {/* Mobile Cart in Dropdown */}
+                  {/* Mobile Cart in Dropdown - moved to top */}
                   <div className="sm:hidden">
                     <CartDrawer>
                       <DropdownMenuItem asChild>

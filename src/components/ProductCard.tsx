@@ -8,6 +8,7 @@ import { ShoppingCart, ExternalLink, Zap } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import LocationAwareBuyButton from './LocationAwareBuyButton';
 
 interface Product {
   id: string;
@@ -54,10 +55,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
     });
   };
 
-  const handleBuyNow = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleBuyNow = () => {
     if (!user) {
       toast({
         variant: "destructive",
@@ -142,14 +140,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
                 Add to Cart
               </Button>
               
-              <Button 
-                size="sm"
-                disabled={!product.in_stock}
-                onClick={handleBuyNow}
+              <LocationAwareBuyButton
+                onBuyNow={handleBuyNow}
+                darazLink={product.daraz_link}
+                className="text-sm px-2 py-1 h-8"
               >
                 <Zap className="h-4 w-4 mr-1" />
                 Buy Now
-              </Button>
+              </LocationAwareBuyButton>
             </div>
           )}
           
