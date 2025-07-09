@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Search, Filter, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Eye, Search, Filter, CheckCircle, XCircle, Clock, CalendarDays } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import PaymentVerificationModal from './PaymentVerificationModal';
 
@@ -18,6 +18,8 @@ const EnhancedOrderManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
@@ -161,7 +163,7 @@ const EnhancedOrderManagement = () => {
     setIsPaymentModalOpen(true);
   };
 
-  // Filter orders
+  // Enhanced filter orders with date support
   const filteredOrders = orders?.filter((order) => {
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -169,8 +171,32 @@ const EnhancedOrderManagement = () => {
     const matchesStatus = statusFilter === 'all' || order.order_status === statusFilter;
     const matchesPayment = paymentFilter === 'all' || order.payment_status === paymentFilter;
     
-    return matchesSearch && matchesStatus && matchesPayment;
+    // Date filtering
+    let matchesDate = true;
+    if (dateFrom || dateTo) {
+      const orderDate = new Date(order.created_at);
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        matchesDate = matchesDate && orderDate >= fromDate;
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        matchesDate = matchesDate && orderDate <= toDate;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesPayment && matchesDate;
   }) || [];
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setPaymentFilter('all');
+    setDateFrom('');
+    setDateTo('');
+  };
 
   if (isLoading) {
     return (
@@ -196,44 +222,74 @@ const EnhancedOrderManagement = () => {
           <CardDescription>Manage customer orders and payments</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Search and Filters */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search by order ID, customer name, or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          {/* Enhanced Search and Filters */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search by order ID, customer name, or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Order Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="shipped">Shipped</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Payment Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Payments</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="pending_verification">Pending Verification</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Order Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="processing">Processing</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="shipped">Shipped</SelectItem>
-                  <SelectItem value="delivered">Delivered</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Payment Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Payments</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="pending_verification">Pending Verification</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
+
+            {/* Date Range Filter */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <div className="flex items-center gap-2 flex-wrap">
+                <CalendarDays className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600">Date Range:</span>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-40"
+                  placeholder="From"
+                />
+                <span className="text-gray-400">to</span>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-40"
+                  placeholder="To"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -269,13 +325,15 @@ const EnhancedOrderManagement = () => {
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={order.order_status}
+                        value={order.order_status || 'processing'}
                         onValueChange={(value) => updateOrderStatus(order.id, value)}
                       >
                         <SelectTrigger className="w-32">
-                          <Badge className={getOrderStatusColor(order.order_status)}>
-                            {order.order_status?.replace('_', ' ').toUpperCase()}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getOrderStatusColor(order.order_status)}>
+                              {order.order_status?.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                          </div>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="processing">Processing</SelectItem>
@@ -288,13 +346,15 @@ const EnhancedOrderManagement = () => {
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={order.payment_status}
+                        value={order.payment_status || 'pending'}
                         onValueChange={(value) => updatePaymentStatus(order.id, value)}
                       >
                         <SelectTrigger className="w-36">
-                          <Badge className={getPaymentStatusColor(order.payment_status)}>
-                            {order.payment_status?.replace('_', ' ').toUpperCase()}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getPaymentStatusColor(order.payment_status)}>
+                              {order.payment_status?.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                          </div>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pending">Pending</SelectItem>
@@ -335,7 +395,7 @@ const EnhancedOrderManagement = () => {
           {filteredOrders.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">
-                {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all'
+                {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all' || dateFrom || dateTo
                   ? 'No orders match your search criteria'
                   : 'No orders found'
                 }

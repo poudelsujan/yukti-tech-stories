@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          related_id: string | null
+          related_type: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          related_id?: string | null
+          related_type?: string | null
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          related_id?: string | null
+          related_type?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       customer_reviews: {
         Row: {
           comment: string
@@ -158,6 +191,7 @@ export type Database = {
           order_status: string | null
           payment_method: string | null
           payment_status: string | null
+          qr_screenshot_url: string | null
           shipping_address: Json
           shipping_cost: number | null
           subtotal: number
@@ -183,6 +217,7 @@ export type Database = {
           order_status?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          qr_screenshot_url?: string | null
           shipping_address: Json
           shipping_cost?: number | null
           subtotal: number
@@ -208,6 +243,7 @@ export type Database = {
           order_status?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          qr_screenshot_url?: string | null
           shipping_address?: Json
           shipping_cost?: number | null
           subtotal?: number

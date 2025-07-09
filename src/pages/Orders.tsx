@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, ShoppingBag, Calendar, MapPin, Eye, Search, Filter, Download, ExternalLink } from 'lucide-react';
+import { Package, ShoppingBag, Calendar, MapPin, Eye, Search, Filter, Download, ExternalLink, CalendarDays } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import PreOrderQuote from '@/components/PreOrderQuote';
 import PreOrderTracking from '@/components/PreOrderTracking';
 
@@ -21,6 +23,8 @@ const Orders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   // Fetch regular orders from Supabase
   const { data: orders, isLoading: ordersLoading } = useQuery({
@@ -113,22 +117,63 @@ const Orders = () => {
     }
   };
 
-  // Filter orders based on search and filter criteria
+  // Enhanced filtering function
   const filteredOrders = orders?.filter((order) => {
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          order.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.order_status === statusFilter;
     const matchesPayment = paymentFilter === 'all' || order.payment_status === paymentFilter;
     
-    return matchesSearch && matchesStatus && matchesPayment;
+    // Date filtering
+    let matchesDate = true;
+    if (dateFrom || dateTo) {
+      const orderDate = new Date(order.created_at);
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        matchesDate = matchesDate && orderDate >= fromDate;
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        matchesDate = matchesDate && orderDate <= toDate;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesPayment && matchesDate;
   }) || [];
 
-  // Filter pre-orders
+  // Filter pre-orders with date support
   const filteredPreOrders = preOrders.filter((order) => {
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          order.item_name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    
+    // Date filtering for pre-orders
+    let matchesDate = true;
+    if (dateFrom || dateTo) {
+      const orderDate = new Date(order.created_at);
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        matchesDate = matchesDate && orderDate >= fromDate;
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        matchesDate = matchesDate && orderDate <= toDate;
+      }
+    }
+    
+    return matchesSearch && matchesDate;
   });
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setPaymentFilter('all');
+    setDateFrom('');
+    setDateTo('');
+  };
 
   if (!user) {
     return (
@@ -158,44 +203,74 @@ const Orders = () => {
             <p className="text-gray-600">Track your orders and pre-orders</p>
           </div>
 
-          {/* Search and Filters */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search by order ID or customer name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          {/* Enhanced Search and Filters */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search by order ID or customer name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Order Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="shipped">Shipped</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Payment Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Payments</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="pending_verification">Pending Verification</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Order Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="processing">Processing</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="shipped">Shipped</SelectItem>
-                  <SelectItem value="delivered">Delivered</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Payment Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Payments</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="pending_verification">Pending Verification</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
+
+            {/* Date Range Filter */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <div className="flex items-center gap-2 flex-wrap">
+                <CalendarDays className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600">Date Range:</span>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-40"
+                  placeholder="From"
+                />
+                <span className="text-gray-400">to</span>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-40"
+                  placeholder="To"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -250,7 +325,7 @@ const Orders = () => {
                           </div>
                         </div>
 
-                        {/* Payment Details */}
+                        {/* Enhanced Payment Details */}
                         {order.payment_method === 'qr' && (
                           <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                             <h4 className="font-medium text-blue-900 mb-2">Payment Details</h4>
@@ -291,6 +366,21 @@ const Orders = () => {
                                       <ExternalLink className="h-4 w-4 mr-1" />
                                       Open
                                     </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => {
+                                        const link = document.createElement('a');
+                                        link.href = order.qr_screenshot_url;
+                                        link.download = `payment_screenshot_${order.id.slice(0, 8)}.jpg`;
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                      }}
+                                    >
+                                      <Download className="h-4 w-4 mr-1" />
+                                      Download
+                                    </Button>
                                   </div>
                                 </div>
                               )}
@@ -312,13 +402,13 @@ const Orders = () => {
                     <CardContent className="text-center py-12">
                       <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all' 
+                        {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all' || dateFrom || dateTo
                           ? 'No matching orders found' 
                           : 'No orders yet'
                         }
                       </h3>
                       <p className="text-gray-600">
-                        {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all'
+                        {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all' || dateFrom || dateTo
                           ? 'Try adjusting your search or filters'
                           : 'When you place orders, they\'ll appear here.'
                         }
@@ -330,7 +420,6 @@ const Orders = () => {
             </TabsContent>
 
             <TabsContent value="preorders">
-              
               <div className="space-y-6">
                 {filteredPreOrders.length > 0 ? (
                   filteredPreOrders.map((preOrder) => (
@@ -352,8 +441,12 @@ const Orders = () => {
                                   <Package className="h-5 w-5" />
                                   {preOrder.item_name}
                                 </CardTitle>
-                                <CardDescription>
+                                <CardDescription className="flex items-center gap-2 mt-1">
+                                  <Calendar className="h-4 w-4" />
                                   Pre-Order ID: {preOrder.id}
+                                  <span className="ml-2">
+                                    {new Date(preOrder.created_at).toLocaleDateString()} at {new Date(preOrder.created_at).toLocaleTimeString()}
+                                  </span>
                                 </CardDescription>
                               </div>
                               <div className="flex items-center gap-2">
@@ -406,10 +499,10 @@ const Orders = () => {
                     <CardContent className="text-center py-12">
                       <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        {searchTerm ? 'No matching pre-orders found' : 'No pre-orders yet'}
+                        {searchTerm || dateFrom || dateTo ? 'No matching pre-orders found' : 'No pre-orders yet'}
                       </h3>
                       <p className="text-gray-600">
-                        {searchTerm ? 'Try adjusting your search' : 'When you submit pre-order requests, they\'ll appear here.'}
+                        {searchTerm || dateFrom || dateTo ? 'Try adjusting your search or date filters' : 'When you submit pre-order requests, they\'ll appear here.'}
                       </p>
                     </CardContent>
                   </Card>
