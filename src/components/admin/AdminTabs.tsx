@@ -36,34 +36,39 @@ interface AdminTabsProps {
 const AdminTabs = ({ users, onUserUpdate, dashboardStats }: AdminTabsProps) => {
   return (
     <Tabs defaultValue="overview" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-7">
-        <TabsTrigger value="overview" className="flex items-center gap-2">
+      <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 h-auto p-1 bg-gray-100">
+        <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
           <BarChart3 className="h-4 w-4" />
-          Overview
+          <span className="hidden sm:inline">Overview</span>
+          <span className="sm:hidden">Stats</span>
         </TabsTrigger>
-        <TabsTrigger value="orders" className="flex items-center gap-2">
+        <TabsTrigger value="orders" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
           <ShoppingCart className="h-4 w-4" />
-          Orders
+          <span>Orders</span>
         </TabsTrigger>
-        <TabsTrigger value="preorders" className="flex items-center gap-2">
+        <TabsTrigger value="preorders" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
           <FileText className="h-4 w-4" />
-          Pre-Orders
+          <span className="hidden sm:inline">Pre-Orders</span>
+          <span className="sm:hidden">Pre-O</span>
         </TabsTrigger>
-        <TabsTrigger value="products" className="flex items-center gap-2">
+        <TabsTrigger value="products" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
           <Package className="h-4 w-4" />
-          Products
+          <span className="hidden sm:inline">Products</span>
+          <span className="sm:hidden">Items</span>
         </TabsTrigger>
-        <TabsTrigger value="users" className="flex items-center gap-2">
+        <TabsTrigger value="users" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
           <Users className="h-4 w-4" />
-          Users
+          <span>Users</span>
         </TabsTrigger>
-        <TabsTrigger value="discounts" className="flex items-center gap-2">
+        <TabsTrigger value="discounts" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
           <Percent className="h-4 w-4" />
-          Discounts
+          <span className="hidden sm:inline">Discounts</span>
+          <span className="sm:hidden">Disc</span>
         </TabsTrigger>
-        <TabsTrigger value="settings" className="flex items-center gap-2">
+        <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 text-xs sm:text-sm">
           <Settings className="h-4 w-4" />
-          Settings
+          <span className="hidden sm:inline">Settings</span>
+          <span className="sm:hidden">Set</span>
         </TabsTrigger>
       </TabsList>
 

@@ -35,6 +35,7 @@ const OrderManagement = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [newStatus, setNewStatus] = useState('');
+  const [newPaymentStatus, setNewPaymentStatus] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [estimatedDelivery, setEstimatedDelivery] = useState('');
 
@@ -71,10 +72,12 @@ const OrderManagement = () => {
   };
 
   const updateOrderStatus = async (orderId: string) => {
-    if (!newStatus) return;
+    if (!newStatus && !newPaymentStatus) return;
 
     try {
-      const updates: any = { order_status: newStatus };
+      const updates: any = {};
+      if (newStatus) updates.order_status = newStatus;
+      if (newPaymentStatus) updates.payment_status = newPaymentStatus;
       if (trackingNumber) updates.tracking_number = trackingNumber;
       if (estimatedDelivery) updates.estimated_delivery = estimatedDelivery;
 
@@ -86,29 +89,32 @@ const OrderManagement = () => {
       if (error) throw error;
 
       // Add status history
-      await supabase
-        .from('order_status_history')
-        .insert({
-          order_id: orderId,
-          status: newStatus,
-          notes: `Status updated to ${newStatus}${trackingNumber ? ` - Tracking: ${trackingNumber}` : ''}`
-        });
+      if (newStatus) {
+        await supabase
+          .from('order_status_history')
+          .insert({
+            order_id: orderId,
+            status: newStatus,
+            notes: `Status updated to ${newStatus}${trackingNumber ? ` - Tracking: ${trackingNumber}` : ''}`
+          });
+      }
 
       toast({
         title: "Success",
-        description: "Order status updated successfully"
+        description: "Order updated successfully"
       });
 
       loadOrders();
       setSelectedOrder(null);
       setNewStatus('');
+      setNewPaymentStatus('');
       setTrackingNumber('');
       setEstimatedDelivery('');
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update order status"
+        description: "Failed to update order"
       });
     }
   };
@@ -133,6 +139,10 @@ const OrderManagement = () => {
       case 'failed': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const formatStatusText = (status: string) => {
+    return status?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown';
   };
 
   if (loading) {
@@ -187,12 +197,12 @@ const OrderManagement = () => {
                     <TableCell>Rs. {order.total_amount.toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(order.order_status)}>
-                        {order.order_status?.replace('_', ' ')}
+                        {formatStatusText(order.order_status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge className={getPaymentStatusColor(order.payment_status)}>
-                        {order.payment_status?.replace('_', ' ')}
+                        {formatStatusText(order.payment_status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -205,7 +215,13 @@ const OrderManagement = () => {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => setSelectedOrder(order)}
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setNewStatus(order.order_status || '');
+                                setNewPaymentStatus(order.payment_status || '');
+                                setTrackingNumber(order.tracking_number || '');
+                                setEstimatedDelivery(order.estimated_delivery || '');
+                              }}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -248,10 +264,10 @@ const OrderManagement = () => {
                                 {/* Update Status */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div>
-                                    <Label htmlFor="status">Update Status</Label>
+                                    <Label htmlFor="status">Order Status</Label>
                                     <Select value={newStatus} onValueChange={setNewStatus}>
                                       <SelectTrigger>
-                                        <SelectValue placeholder="Select status" />
+                                        <SelectValue placeholder={`Current: ${formatStatusText(selectedOrder.order_status)}`} />
                                       </SelectTrigger>
                                       <SelectContent>
                                         <SelectItem value="processing">Processing</SelectItem>
@@ -265,6 +281,23 @@ const OrderManagement = () => {
                                   </div>
 
                                   <div>
+                                    <Label htmlFor="payment-status">Payment Status</Label>
+                                    <Select value={newPaymentStatus} onValueChange={setNewPaymentStatus}>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder={`Current: ${formatStatusText(selectedOrder.payment_status)}`} />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="pending_verification">Pending Verification</SelectItem>
+                                        <SelectItem value="completed">Completed</SelectItem>
+                                        <SelectItem value="failed">Failed</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
                                     <Label htmlFor="tracking">Tracking Number</Label>
                                     <Input
                                       id="tracking"
@@ -273,22 +306,22 @@ const OrderManagement = () => {
                                       placeholder="Enter tracking number"
                                     />
                                   </div>
-                                </div>
 
-                                <div>
-                                  <Label htmlFor="delivery">Estimated Delivery</Label>
-                                  <Input
-                                    id="delivery"
-                                    type="date"
-                                    value={estimatedDelivery}
-                                    onChange={(e) => setEstimatedDelivery(e.target.value)}
-                                  />
+                                  <div>
+                                    <Label htmlFor="delivery">Estimated Delivery</Label>
+                                    <Input
+                                      id="delivery"
+                                      type="date"
+                                      value={estimatedDelivery}
+                                      onChange={(e) => setEstimatedDelivery(e.target.value)}
+                                    />
+                                  </div>
                                 </div>
 
                                 <Button 
                                   onClick={() => updateOrderStatus(selectedOrder.id)}
                                   className="w-full"
-                                  disabled={!newStatus}
+                                  disabled={!newStatus && !newPaymentStatus}
                                 >
                                   <Truck className="h-4 w-4 mr-2" />
                                   Update Order

@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, X, User, LogOut, ShoppingBag, UserCircle, Settings } from 'lucide-react';
+import { Menu, X, User, LogOut, ShoppingBag, UserCircle, Settings, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
+import { useCart } from '@/hooks/useCart';
 import MobileNavbar from './MobileNavbar';
 import CartIcon from './CartIcon';
 import CartDrawer from './CartDrawer';
@@ -13,7 +14,9 @@ import CartDrawer from './CartDrawer';
 const Header = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdminStatus();
+  const { getTotalItems } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const totalItems = getTotalItems();
 
   const navItems = [
     { name: 'Home', href: '/' },
@@ -53,16 +56,18 @@ const Header = () => {
 
           {/* Right side - Cart and Auth */}
           <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Cart Icon */}
-            <CartDrawer>
-              <CartIcon onClick={() => {}} />
-            </CartDrawer>
+            {/* Desktop Cart Icon */}
+            <div className="hidden sm:block">
+              <CartDrawer>
+                <CartIcon onClick={() => {}} />
+              </CartDrawer>
+            </div>
 
             {/* Auth Section */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-2 px-1 sm:px-3 h-9">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 h-9">
                     <UserCircle className="h-5 w-5" />
                     <span className="hidden sm:inline text-sm font-medium truncate max-w-20">
                       {user.email?.split('@')[0]}
@@ -70,6 +75,19 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-white">
+                  {/* Mobile Cart in Dropdown */}
+                  <div className="sm:hidden">
+                    <CartDrawer>
+                      <DropdownMenuItem asChild>
+                        <button className="flex items-center gap-2 w-full">
+                          <ShoppingCart className="h-4 w-4" />
+                          Cart {totalItems > 0 && `(${totalItems})`}
+                        </button>
+                      </DropdownMenuItem>
+                    </CartDrawer>
+                    <DropdownMenuSeparator />
+                  </div>
+                  
                   <DropdownMenuItem asChild>
                     <Link to="/profile" className="flex items-center gap-2 w-full">
                       <User className="h-4 w-4" />

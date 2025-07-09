@@ -3,6 +3,7 @@ import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AdminTabs from '@/components/admin/AdminTabs';
+import AdminNotifications from '@/components/admin/AdminNotifications';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { useAdminData } from '@/hooks/useAdminData';
 import { useAdminDashboard } from '@/hooks/useAdminDashboard';
@@ -40,11 +41,18 @@ const Admin = () => {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-2">Manage your store, orders, and customers</p>
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p className="text-gray-600 mt-2">Manage your store, orders, and customers</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <AdminNotifications />
+              </div>
+            </div>
           </div>
           <AdminTabs 
             users={users} 
