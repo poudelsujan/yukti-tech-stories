@@ -30,10 +30,17 @@ export const useAdminNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
+      // Type guard to ensure data is in the expected format
+      const validNotifications = (data || []).filter((item: any) => 
+        item && typeof item === 'object' && 'id' in item && 'title' in item && 'message' in item
+      ) as AdminNotification[];
+
+      setNotifications(validNotifications);
+      setUnreadCount(validNotifications.filter(n => !n.read).length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
