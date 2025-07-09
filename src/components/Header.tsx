@@ -10,6 +10,7 @@ import { useCart } from '@/hooks/useCart';
 import MobileNavbar from './MobileNavbar';
 import CartIcon from './CartIcon';
 import CartDrawer from './CartDrawer';
+import AdminNotifications from './admin/AdminNotifications';
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -54,8 +55,13 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Right side - Cart and Auth */}
+          {/* Right side - Cart, Notifications and Auth */}
           <div className="flex items-center space-x-1 sm:space-x-3">
+            {/* Admin Notifications - Only show for admin users */}
+            {user && isAdmin && (
+              <AdminNotifications />
+            )}
+
             {/* Desktop Cart Icon */}
             <div className="hidden sm:block">
               <CartDrawer>

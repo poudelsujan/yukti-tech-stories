@@ -1,5 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, X, CheckCheck, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { cn } from '@/lib/utils';
 
 const AdminNotifications = () => {
+  const navigate = useNavigate();
   const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useAdminNotifications();
   const audioRef = useRef<HTMLAudioElement>(null);
   const prevUnreadCountRef = useRef(unreadCount);
@@ -61,6 +63,38 @@ const AdminNotifications = () => {
       case 'warning': return 'text-yellow-600 bg-yellow-50';
       case 'error': return 'text-red-600 bg-red-50';
       default: return 'text-blue-600 bg-blue-50';
+    }
+  };
+
+  const handleNotificationClick = (notification: any) => {
+    // Mark as read
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+
+    // Navigate based on notification type and related data
+    if (notification.related_type && notification.related_id) {
+      switch (notification.related_type) {
+        case 'order':
+          navigate('/admin?tab=orders');
+          break;
+        case 'preorder':
+          navigate('/admin?tab=preorders');
+          break;
+        case 'product':
+          navigate('/admin?tab=products');
+          break;
+        case 'user':
+          navigate('/admin?tab=users');
+          break;
+        case 'discount':
+          navigate('/admin?tab=discounts');
+          break;
+        default:
+          navigate('/admin');
+      }
+    } else {
+      navigate('/admin');
     }
   };
 
@@ -120,7 +154,7 @@ const AdminNotifications = () => {
                     "p-4 hover:bg-gray-50 transition-colors cursor-pointer",
                     !notification.read && "bg-blue-50/50 border-l-2 border-l-blue-500"
                   )}
-                  onClick={() => !notification.read && markAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-lg flex-shrink-0 mt-0.5">

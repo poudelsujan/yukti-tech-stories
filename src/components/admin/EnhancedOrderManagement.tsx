@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import OrderFilters from '@/components/orders/OrderFilters';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Search, Filter, CheckCircle, XCircle, Clock, CalendarDays } from 'lucide-react';
+import { Eye, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import PaymentVerificationModal from './PaymentVerificationModal';
 
@@ -23,7 +24,7 @@ const EnhancedOrderManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders = [], isLoading } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,6 +42,44 @@ const EnhancedOrderManagement = () => {
       if (error) throw error;
       return data || [];
     },
+  });
+
+  // Enhanced filter orders with date support
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.customer_email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || order.order_status === statusFilter;
+    const matchesPayment = paymentFilter === 'all' || order.payment_status === paymentFilter;
+    
+    // Date filtering
+    let matchesDate = true;
+    if (dateFrom || dateTo) {
+      const orderDate = new Date(order.created_at);
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        matchesDate = matchesDate && orderDate >= fromDate;
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        matchesDate = matchesDate && orderDate <= toDate;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesPayment && matchesDate;
+  });
+
+  const {
+    displayedItems: displayedOrders,
+    hasMore,
+    isLoadingMore,
+    loadMore
+  } = useInfiniteScroll({
+    data: filteredOrders,
+    itemsPerPage: 20,
+    loading: isLoading
   });
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -163,39 +202,29 @@ const EnhancedOrderManagement = () => {
     setIsPaymentModalOpen(true);
   };
 
-  // Enhanced filter orders with date support
-  const filteredOrders = orders?.filter((order) => {
-    const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customer_email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || order.order_status === statusFilter;
-    const matchesPayment = paymentFilter === 'all' || order.payment_status === paymentFilter;
-    
-    // Date filtering
-    let matchesDate = true;
-    if (dateFrom || dateTo) {
-      const orderDate = new Date(order.created_at);
-      if (dateFrom) {
-        const fromDate = new Date(dateFrom);
-        fromDate.setHours(0, 0, 0, 0);
-        matchesDate = matchesDate && orderDate >= fromDate;
-      }
-      if (dateTo) {
-        const toDate = new Date(dateTo);
-        toDate.setHours(23, 59, 59, 999);
-        matchesDate = matchesDate && orderDate <= toDate;
-      }
-    }
-    
-    return matchesSearch && matchesStatus && matchesPayment && matchesDate;
-  }) || [];
-
   const clearFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
     setPaymentFilter('all');
     setDateFrom('');
     setDateTo('');
+  };
+
+  const downloadScreenshot = async (url: string, orderId: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `payment_screenshot_${orderId}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Failed to download screenshot:', error);
+    }
   };
 
   if (isLoading) {
@@ -222,76 +251,21 @@ const EnhancedOrderManagement = () => {
           <CardDescription>Manage customer orders and payments</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Enhanced Search and Filters */}
-          <div className="mb-6 space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search by order ID, customer name, or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Order Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="shipped">Shipped</SelectItem>
-                    <SelectItem value="delivered">Delivered</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Payment Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Payments</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="pending_verification">Pending Verification</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Date Range Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
-              <div className="flex items-center gap-2 flex-wrap">
-                <CalendarDays className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Date Range:</span>
-                <Input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="w-40"
-                  placeholder="From"
-                />
-                <span className="text-gray-400">to</span>
-                <Input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="w-40"
-                  placeholder="To"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={clearFilters}>
-                  Clear Filters
-                </Button>
-              </div>
-            </div>
-          </div>
+          <OrderFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            paymentFilter={paymentFilter}
+            setPaymentFilter={setPaymentFilter}
+            dateFrom={dateFrom}
+            setDateFrom={setDateFrom}
+            dateTo={dateTo}
+            setDateTo={setDateTo}
+            onClearFilters={clearFilters}
+            showPaymentFilter={true}
+            isAdmin={true}
+          />
 
           {/* Orders Table */}
           <div className="overflow-x-auto">
@@ -309,7 +283,7 @@ const EnhancedOrderManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
+                {displayedOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-mono text-sm">
                       #{order.id.slice(0, 8)}
@@ -384,6 +358,15 @@ const EnhancedOrderManagement = () => {
                             <Eye className="h-4 w-4" />
                           </Button>
                         )}
+                        {order.qr_screenshot_url && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => downloadScreenshot(order.qr_screenshot_url, order.id)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -391,6 +374,29 @@ const EnhancedOrderManagement = () => {
               </TableBody>
             </Table>
           </div>
+
+          {/* Loading More Indicator */}
+          {isLoadingMore && (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            </div>
+          )}
+
+          {/* Load More Button */}
+          {hasMore && !isLoadingMore && (
+            <div className="flex justify-center py-4">
+              <Button onClick={loadMore} variant="outline">
+                Load More Orders
+              </Button>
+            </div>
+          )}
+
+          {/* End of results */}
+          {!hasMore && displayedOrders.length > 0 && (
+            <div className="text-center py-4 text-gray-500">
+              <p>You've reached the end of the orders list</p>
+            </div>
+          )}
 
           {filteredOrders.length === 0 && (
             <div className="text-center py-8">
