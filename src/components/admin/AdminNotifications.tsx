@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Bell, X, CheckCheck, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 
 const AdminNotifications = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useAdminNotifications();
   const audioRef = useRef<HTMLAudioElement>(null);
   const prevUnreadCountRef = useRef(unreadCount);
@@ -76,19 +77,36 @@ const AdminNotifications = () => {
     if (notification.related_type && notification.related_id) {
       switch (notification.related_type) {
         case 'order':
-          navigate('/admin?tab=orders');
+          // Navigate to admin orders tab
+          navigate('/admin');
+          // Set the tab parameter
+          setTimeout(() => {
+            setSearchParams({ tab: 'orders' });
+          }, 100);
           break;
         case 'preorder':
-          navigate('/admin?tab=preorders');
+          navigate('/admin');
+          setTimeout(() => {
+            setSearchParams({ tab: 'preorders' });
+          }, 100);
           break;
         case 'product':
-          navigate('/admin?tab=products');
+          navigate('/admin');
+          setTimeout(() => {
+            setSearchParams({ tab: 'products' });
+          }, 100);
           break;
         case 'user':
-          navigate('/admin?tab=users');
+          navigate('/admin');
+          setTimeout(() => {
+            setSearchParams({ tab: 'users' });
+          }, 100);
           break;
         case 'discount':
-          navigate('/admin?tab=discounts');
+          navigate('/admin');
+          setTimeout(() => {
+            setSearchParams({ tab: 'discounts' });
+          }, 100);
           break;
         default:
           navigate('/admin');

@@ -93,9 +93,9 @@ export const useAdminNotifications = () => {
   useEffect(() => {
     fetchNotifications();
 
-    // Set up real-time subscription
+    // Set up real-time subscription with proper cleanup
     const channel = supabase
-      .channel('admin-notifications')
+      .channel('admin-notifications-' + Math.random()) // Unique channel name
       .on(
         'postgres_changes',
         {
@@ -110,7 +110,8 @@ export const useAdminNotifications = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      // Properly unsubscribe
+      channel.unsubscribe();
     };
   }, []);
 

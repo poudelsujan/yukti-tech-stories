@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, User } from 'lucide-react';
 import CustomerReviews from '@/components/CustomerReviews';
+import LocationAwareBuyButton from '@/components/LocationAwareBuyButton';
 
 interface Product {
   id: string;
@@ -309,13 +310,18 @@ const ProductDetail = () => {
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Add to Cart
                 </Button>
-                <Button
-                  onClick={handleBuyNow}
+                
+                {/* Use LocationAwareBuyButton for location-based purchasing */}
+                <LocationAwareBuyButton
+                  onBuyNow={handleBuyNow}
+                  darazLink={product.daraz_link || undefined}
                   className="flex-1"
-                  disabled={isOutOfStock || !user}
-                >
-                  Buy Now
-                </Button>
+                  children={
+                    <span className={isOutOfStock || !user ? "opacity-50" : ""}>
+                      Buy Now
+                    </span>
+                  }
+                />
               </div>
             </div>
           </div>
