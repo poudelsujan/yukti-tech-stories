@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, Download, Package, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Json } from '@/integrations/supabase/types';
 
 interface Order {
   id: string;
@@ -23,8 +24,8 @@ interface Order {
   payment_status: string;
   payment_method: string;
   qr_screenshot_url?: string;
-  order_items: any[];
-  shipping_address: any;
+  order_items: Json;
+  shipping_address: Json;
 }
 
 const Orders = () => {
@@ -53,7 +54,7 @@ const Orders = () => {
   });
 
   // Filter orders based on search and filter criteria
-  const filteredOrders = orders.filter((order: Order) => {
+  const filteredOrders = orders.filter((order) => {
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.order_status === statusFilter;
     const matchesPayment = paymentFilter === 'all' || order.payment_status === paymentFilter;
@@ -207,108 +208,113 @@ const Orders = () => {
             </Card>
           ) : (
             <div className="space-y-6">
-              {displayedOrders.map((order: Order) => (
-                <Card key={order.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-lg">Order #{order.id.slice(0, 8)}</CardTitle>
-                        <CardDescription>
-                          Placed on {new Date(order.created_at).toLocaleDateString()} at{' '}
-                          {new Date(order.created_at).toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </CardDescription>
+              {displayedOrders.map((order) => {
+                // Safely handle order_items which might be Json
+                const orderItems = Array.isArray(order.order_items) ? order.order_items : [];
+                
+                return (
+                  <Card key={order.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">Order #{order.id.slice(0, 8)}</CardTitle>
+                          <CardDescription>
+                            Placed on {new Date(order.created_at).toLocaleDateString()} at{' '}
+                            {new Date(order.created_at).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </CardDescription>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-gray-900">
+                            Rs. {order.total_amount.toLocaleString()}
+                          </p>
+                          <p className="text-sm text-gray-600 capitalize">
+                            {order.payment_method?.replace('_', ' ')}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-gray-900">
-                          Rs. {order.total_amount.toLocaleString()}
-                        </p>
-                        <p className="text-sm text-gray-600 capitalize">
-                          {order.payment_method?.replace('_', ' ')}
-                        </p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Order Status */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Order Status:</span>
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(order.order_status)}
-                            <Badge className={getStatusColor(order.order_status)}>
-                              {order.order_status?.replace('_', ' ').toUpperCase()}
+                    </CardHeader>
+                    
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Order Status */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-600">Order Status:</span>
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(order.order_status)}
+                              <Badge className={getStatusColor(order.order_status)}>
+                                {order.order_status?.replace('_', ' ').toUpperCase()}
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-600">Payment Status:</span>
+                            <Badge className={getPaymentStatusColor(order.payment_status)}>
+                              {order.payment_status?.replace('_', ' ').toUpperCase()}
                             </Badge>
                           </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">Payment Status:</span>
-                          <Badge className={getPaymentStatusColor(order.payment_status)}>
-                            {order.payment_status?.replace('_', ' ').toUpperCase()}
-                          </Badge>
+
+                          {/* Payment Screenshot */}
+                          {order.qr_screenshot_url && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-gray-600">Payment Screenshot:</span>
+                              <div className="flex gap-2">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      View
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-2xl">
+                                    <DialogHeader>
+                                      <DialogTitle>Payment Screenshot</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="mt-4">
+                                      <img 
+                                        src={order.qr_screenshot_url} 
+                                        alt="Payment Screenshot"
+                                        className="w-full h-auto rounded-lg"
+                                      />
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => downloadScreenshot(order.qr_screenshot_url!, order.id)}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Download
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Payment Screenshot */}
-                        {order.qr_screenshot_url && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">Payment Screenshot:</span>
-                            <div className="flex gap-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="outline" size="sm">
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    View
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-2xl">
-                                  <DialogHeader>
-                                    <DialogTitle>Payment Screenshot</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="mt-4">
-                                    <img 
-                                      src={order.qr_screenshot_url} 
-                                      alt="Payment Screenshot"
-                                      className="w-full h-auto rounded-lg"
-                                    />
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => downloadScreenshot(order.qr_screenshot_url!, order.id)}
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Download
-                              </Button>
-                            </div>
+                        {/* Order Items */}
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-600 mb-2">Items Ordered:</h4>
+                          <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {orderItems.map((item: any, index: number) => (
+                              <div key={index} className="flex justify-between text-sm">
+                                <span className="truncate">{item.title}</span>
+                                <span className="ml-2 flex-shrink-0">
+                                  {item.quantity}x Rs. {item.price.toLocaleString()}
+                                </span>
+                              </div>
+                            ))}
                           </div>
-                        )}
-                      </div>
-
-                      {/* Order Items */}
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-600 mb-2">Items Ordered:</h4>
-                        <div className="space-y-2 max-h-32 overflow-y-auto">
-                          {order.order_items.map((item: any, index: number) => (
-                            <div key={index} className="flex justify-between text-sm">
-                              <span className="truncate">{item.title}</span>
-                              <span className="ml-2 flex-shrink-0">
-                                {item.quantity}x Rs. {item.price.toLocaleString()}
-                              </span>
-                            </div>
-                          ))}
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
 
               {/* Loading More Indicator */}
               {isLoadingMore && (
@@ -331,7 +337,7 @@ const Orders = () => {
                 <div className="text-center py-4 text-gray-500">
                   <p>You've reached the end of your orders</p>
                 </div>
-              )}
+                )}
             </div>
           )}
         </div>
