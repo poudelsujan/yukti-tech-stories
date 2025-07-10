@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, ExternalLink, Zap } from 'lucide-react';
+import { ShoppingCart, ExternalLink, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,7 @@ interface Product {
   price: number;
   category: string;
   image: string;
+  images?: string[];
   trending?: boolean;
   daraz_link?: string;
   in_stock?: boolean;
@@ -31,6 +32,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Get all available images
+  const allImages = product.images && product.images.length > 0 ? product.images : [product.image];
+  const hasMultipleImages = allImages.length > 1;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -50,7 +56,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       id: product.id,
       title: product.title,
       price: product.price,
-      image_url: product.image,
+      image_url: allImages[0],
       category: product.category
     });
   };
@@ -66,21 +72,29 @@ const ProductCard = ({ product }: ProductCardProps) => {
       return;
     }
     
-    // Create a temporary checkout item
     const checkoutItem = {
       id: product.id,
       title: product.title,
       price: product.price,
-      image_url: product.image,
+      image_url: allImages[0],
       category: product.category,
       quantity: 1
     };
     
-    // Store in session storage for checkout
     sessionStorage.setItem('checkoutItems', JSON.stringify([checkoutItem]));
-    
-    // Navigate to checkout
     navigate('/checkout');
+  };
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   };
 
   return (
@@ -88,10 +102,41 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <Link to={`/product/${product.id}`}>
         <div className="relative overflow-hidden">
           <img 
-            src={product.image} 
+            src={allImages[currentImageIndex]} 
             alt={product.title}
             className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
           />
+          
+          {/* Image navigation for multiple images */}
+          {hasMultipleImages && (
+            <>
+              <button
+                onClick={prevImage}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-opacity-70"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-opacity-70"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              
+              {/* Image indicators */}
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                {allImages.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
           {product.trending && (
             <Badge className="absolute top-2 left-2 bg-blue-500">
               Trending
@@ -144,6 +189,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                 onBuyNow={handleBuyNow}
                 darazLink={product.daraz_link}
                 className="text-sm px-2 py-1 h-8"
+                disabled={!product.in_stock}
               >
                 <Zap className="h-4 w-4 mr-1" />
                 Buy Now

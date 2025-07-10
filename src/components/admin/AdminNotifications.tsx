@@ -1,49 +1,27 @@
 
 import React, { useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Bell, X, CheckCheck, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
-import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 const AdminNotifications = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useAdminNotifications();
   const audioRef = useRef<HTMLAudioElement>(null);
   const prevUnreadCountRef = useRef(unreadCount);
 
-  // Play notification sound when new notifications arrive
+  // Play notification sound when new notification arrives
   useEffect(() => {
     if (unreadCount > prevUnreadCountRef.current && unreadCount > 0) {
-      // Create notification sound
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
-
-      // Browser notification if permission granted
-      if (Notification.permission === 'granted') {
-        new Notification('New Admin Notification', {
-          body: `You have ${unreadCount} unread notifications`,
-          icon: '/favicon.ico',
-          badge: '/favicon.ico'
+      if (audioRef.current) {
+        audioRef.current.play().catch(error => {
+          console.log('Could not play notification sound:', error);
         });
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission();
       }
     }
     prevUnreadCountRef.current = unreadCount;
@@ -51,65 +29,83 @@ const AdminNotifications = () => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'success': return '✅';
-      case 'warning': return '⚠️';
-      case 'error': return '❌';
-      default: return 'ℹ️';
+      case 'order':
+        return '📦';
+      case 'preorder':
+        return '📋';
+      case 'user':
+        return '👤';
+      case 'product':
+        return '🛍️';
+      case 'payment':
+        return '💳';
+      case 'discount':
+        return '🏷️';
+      case 'success':
+        return '✅';
+      case 'warning':
+        return '⚠️';
+      case 'error':
+        return '❌';
+      default:
+        return 'ℹ️';
     }
   };
 
   const getNotificationColor = (type: string) => {
     switch (type) {
-      case 'success': return 'text-green-600 bg-green-50';
-      case 'warning': return 'text-yellow-600 bg-yellow-50';
-      case 'error': return 'text-red-600 bg-red-50';
-      default: return 'text-blue-600 bg-blue-50';
+      case 'success':
+        return 'bg-green-100 border-green-200 text-green-800';
+      case 'warning':
+        return 'bg-yellow-100 border-yellow-200 text-yellow-800';
+      case 'error':
+        return 'bg-red-100 border-red-200 text-red-800';
+      case 'order':
+        return 'bg-blue-100 border-blue-200 text-blue-800';
+      case 'payment':
+        return 'bg-purple-100 border-purple-200 text-purple-800';
+      default:
+        return 'bg-gray-100 border-gray-200 text-gray-800';
     }
   };
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = async (notification: any) => {
     // Mark as read
     if (!notification.read) {
-      markAsRead(notification.id);
+      await markAsRead(notification.id);
     }
 
-    // Navigate based on notification type and related data
+    // Navigate to related page with proper tab highlighting
     if (notification.related_type && notification.related_id) {
       switch (notification.related_type) {
         case 'order':
-          // Navigate to admin orders tab
-          navigate('/admin');
-          // Set the tab parameter
-          setTimeout(() => {
-            setSearchParams({ tab: 'orders' });
-          }, 100);
+          navigate('/admin?tab=orders', { 
+            state: { highlightId: notification.related_id }
+          });
           break;
         case 'preorder':
-          navigate('/admin');
-          setTimeout(() => {
-            setSearchParams({ tab: 'preorders' });
-          }, 100);
+          navigate('/admin?tab=preorders', { 
+            state: { highlightId: notification.related_id }
+          });
           break;
         case 'product':
-          navigate('/admin');
-          setTimeout(() => {
-            setSearchParams({ tab: 'products' });
-          }, 100);
+          navigate('/admin?tab=products', { 
+            state: { highlightId: notification.related_id }
+          });
           break;
         case 'user':
-          navigate('/admin');
-          setTimeout(() => {
-            setSearchParams({ tab: 'users' });
-          }, 100);
+          navigate('/admin?tab=users', { 
+            state: { highlightId: notification.related_id }
+          });
           break;
         case 'discount':
-          navigate('/admin');
-          setTimeout(() => {
-            setSearchParams({ tab: 'discounts' });
-          }, 100);
+          navigate('/admin?tab=discounts', { 
+            state: { highlightId: notification.related_id }
+          });
           break;
         default:
           navigate('/admin');
+          break;
       }
     } else {
       navigate('/admin');
@@ -118,105 +114,119 @@ const AdminNotifications = () => {
 
   if (loading) {
     return (
-      <Button variant="ghost" size="sm" disabled>
-        <Bell className="h-5 w-5" />
-      </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full animate-pulse"
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0 bg-white">
-        <div className="p-4 border-b bg-gray-50">
+    <>
+      {/* Hidden audio element for notification sound */}
+      <audio ref={audioRef} preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMeCSCN0fPNeSsBJHfH8N2QQAoUXrTp66hVFApGn+DyvmMeCSCN0fPNeSsBJHfH8N2QQAoUXrTp66hVFApGn+DyvmMeCSCN0fPNeSsBJHfH8N2QQAoUXrTp66hVFApGn+DyvmMeCSCN0fPNeSsBIoXG8t+PPwsVXLPo7KpWFAlFnt7xwGQfByCM0fPNeSsBJHfH8N2QQAoUXrTp66hVFApGn+DyvmMeCSCN0fPNeSsBHoLG8t+PPwsVXLPo7KpWFAlFnt7xwGQfByCM0fPNeSsBJHfH8N2QQAoUXrTp66hVFApGn+DyvmMeCSCN0fPNeSsBJHfH8N2QQAoUXrTp66hVFApGn+DyvmMeCSCN0fPNeSsB" type="audio/wav" />
+      </audio>
+
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
-            {unreadCount > 0 && (
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Notifications
+              {unreadCount > 0 && (
+                <Badge variant="destructive" className="ml-2">
+                  {unreadCount}
+                </Badge>
+              )}
+            </CardTitle>
+            {notifications.length > 0 && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={markAllAsRead}
-                className="text-xs text-blue-600 hover:text-blue-700"
+                className="flex items-center gap-1"
               >
-                <CheckCheck className="h-3 w-3 mr-1" />
-                Mark all read
+                <CheckCheck className="h-4 w-4" />
+                Mark All Read
               </Button>
             )}
           </div>
-        </div>
-        
-        <div className="max-h-96 overflow-y-auto">
+        </CardHeader>
+        <CardContent>
           {notifications.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-sm">No notifications yet</p>
+            <div className="text-center py-8 text-gray-500">
+              <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>No notifications yet</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {notifications.slice(0, 10).map((notification) => (
-                <div
-                  key={notification.id}
-                  className={cn(
-                    "p-4 hover:bg-gray-50 transition-colors cursor-pointer",
-                    !notification.read && "bg-blue-50/50 border-l-2 border-l-blue-500"
-                  )}
-                  onClick={() => handleNotificationClick(notification)}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-lg flex-shrink-0 mt-0.5">
-                      {getNotificationIcon(notification.type)}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className={cn(
-                          "text-sm font-medium truncate",
-                          !notification.read ? "text-gray-900" : "text-gray-600"
-                        )}>
-                          {notification.title}
-                        </h4>
-                        {!notification.read && (
-                          <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
-                        )}
+            <ScrollArea className="h-96">
+              <div className="space-y-3">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
+                      notification.read 
+                        ? 'bg-gray-50 border-gray-200' 
+                        : getNotificationColor(notification.type)
+                    }`}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1">
+                        <span className="text-lg flex-shrink-0">
+                          {getNotificationIcon(notification.type)}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className={`font-medium text-sm ${
+                              notification.read ? 'text-gray-600' : 'text-gray-900'
+                            }`}>
+                              {notification.title}
+                            </h4>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                            )}
+                          </div>
+                          <p className={`text-sm ${
+                            notification.read ? 'text-gray-500' : 'text-gray-700'
+                          }`}>
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        {new Date(notification.created_at).toLocaleDateString()} at{' '}
-                        {new Date(notification.created_at).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-1 h-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNotificationClick(notification);
+                        }}
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ScrollArea>
           )}
-        </div>
-        
-        {notifications.length > 10 && (
-          <div className="p-3 border-t bg-gray-50 text-center">
-            <p className="text-xs text-gray-500">
-              Showing 10 of {notifications.length} notifications
-            </p>
-          </div>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

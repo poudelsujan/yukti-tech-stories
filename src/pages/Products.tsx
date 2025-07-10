@@ -17,9 +17,12 @@ interface Product {
   price: number;
   category: string;
   image_url: string | null;
+  images: string[] | null;
   trending?: boolean;
   tags: string[] | null;
   in_stock: boolean | null;
+  description?: string;
+  daraz_link?: string;
 }
 
 const Products = () => {
@@ -35,7 +38,6 @@ const Products = () => {
   const [loadingSampleData, setLoadingSampleData] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Use infinite scroll for products
   const {
     displayedItems: displayedProducts,
     hasMore,
@@ -87,7 +89,10 @@ const Products = () => {
       
       const formattedProducts = data?.map(product => ({
         ...product,
-        image: product.image_url || '/placeholder.svg'
+        // Use first image from images array, fallback to image_url, then placeholder
+        image: product.images && product.images.length > 0 
+          ? product.images[0] 
+          : product.image_url || '/placeholder.svg'
       })) || [];
 
       setProducts(formattedProducts);
@@ -301,7 +306,10 @@ const Products = () => {
                   key={product.id}
                   product={{
                     ...product,
-                    image: product.image_url || '/placeholder.svg'
+                    image: product.images && product.images.length > 0 
+                      ? product.images[0] 
+                      : product.image_url || '/placeholder.svg',
+                    images: product.images || []
                   }}
                 />
               ))}
