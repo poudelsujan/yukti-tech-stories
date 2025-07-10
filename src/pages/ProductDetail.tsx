@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, User, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingCart, User } from 'lucide-react';
 import CustomerReviews from '@/components/CustomerReviews';
 import LocationAwareBuyButton from '@/components/LocationAwareBuyButton';
 
@@ -20,7 +20,6 @@ interface Product {
   price: number;
   category: string;
   image_url: string | null;
-  images: string[] | null;
   daraz_link: string | null;
   tags: string[] | null;
   trending: boolean | null;
@@ -37,7 +36,6 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -98,12 +96,13 @@ const ProductDetail = () => {
       return;
     }
 
+    // Add to cart multiple times based on quantity
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: product.id,
         title: product.title,
         price: product.price,
-        image_url: allImages[0]
+        image_url: product.image_url
       });
     }
 
@@ -144,16 +143,23 @@ const ProductDetail = () => {
       return;
     }
 
+    // Store the item for checkout
     const checkoutItem = {
       id: product.id,
       title: product.title,
       price: product.price,
-      image_url: allImages[0],
+      image_url: product.image_url,
       quantity: quantity
     };
 
     sessionStorage.setItem('checkoutItems', JSON.stringify([checkoutItem]));
     navigate('/checkout');
+  };
+
+  const handleDarazRedirect = () => {
+    if (product?.daraz_link) {
+      window.open(product.daraz_link, '_blank');
+    }
   };
 
   if (loading) {
@@ -183,79 +189,26 @@ const ProductDetail = () => {
 
   const isOutOfStock = !product.in_stock || (product.stock_quantity !== null && product.stock_quantity <= 0);
   const isLowStock = product.stock_quantity !== null && product.stock_quantity <= 10 && product.stock_quantity > 0;
-  
-  // Get all available images
-  const allImages = product.images && product.images.length > 0 ? product.images : [product.image_url].filter(Boolean);
-  const hasMultipleImages = allImages.length > 1;
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Product Images */}
+          {/* Product Image */}
           <div className="space-y-4">
-            <div className="aspect-square bg-white rounded-lg overflow-hidden relative">
-              {allImages.length > 0 ? (
-                <>
-                  <img
-                    src={allImages[currentImageIndex]}
-                    alt={product.title}
-                    className="w-full h-full object-cover"
-                  />
-                  
-                  {/* Image navigation for multiple images */}
-                  {hasMultipleImages && (
-                    <>
-                      <button
-                        onClick={prevImage}
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all"
-                      >
-                        <ChevronLeft className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={nextImage}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all"
-                      >
-                        <ChevronRight className="h-5 w-5" />
-                      </button>
-                    </>
-                  )}
-                </>
+            <div className="aspect-square bg-white rounded-lg overflow-hidden">
+              {product.image_url ? (
+                <img
+                  src={product.image_url}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-200">
                   <span className="text-gray-400">No image available</span>
                 </div>
               )}
             </div>
-            
-            {/* Image thumbnails */}
-            {hasMultipleImages && (
-              <div className="grid grid-cols-4 gap-2">
-                {allImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                      index === currentImageIndex ? 'border-primary' : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${product.title} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Product Details */}
@@ -358,33 +311,18 @@ const ProductDetail = () => {
                   Add to Cart
                 </Button>
                 
+                {/* Use LocationAwareBuyButton for location-based purchasing */}
                 <LocationAwareBuyButton
                   onBuyNow={handleBuyNow}
                   darazLink={product.daraz_link || undefined}
                   className="flex-1"
-                  disabled={isOutOfStock || !user}
-                >
-                  Buy Now
-                </LocationAwareBuyButton>
+                  children={
+                    <span className={isOutOfStock || !user ? "opacity-50" : ""}>
+                      Buy Now
+                    </span>
+                  }
+                />
               </div>
-
-              {/* Daraz Button - Always show if link exists */}
-              {product.daraz_link && (
-                <a 
-                  href={product.daraz_link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block"
-                >
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-orange-500 text-orange-600 hover:bg-orange-50"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Buy on Daraz
-                  </Button>
-                </a>
-              )}
             </div>
           </div>
         </div>

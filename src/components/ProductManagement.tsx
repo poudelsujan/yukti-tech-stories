@@ -13,7 +13,6 @@ import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, Image, Package, ExternalLink } from 'lucide-react';
 import SampleDataLoader from './SampleDataLoader';
 import ProductSearch from './admin/ProductSearch';
-import MultipleImageUpload from './MultipleImageUpload';
 
 interface Product {
   id: string;
@@ -22,7 +21,6 @@ interface Product {
   price: number;
   category: string;
   image_url: string | null;
-  images: string[] | null;
   daraz_link: string | null;
   tags: string[] | null;
   trending: boolean | null;
@@ -47,6 +45,7 @@ const ProductManagement = () => {
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([]);
   
   // Search and filter states
@@ -64,8 +63,7 @@ const ProductManagement = () => {
     tags: '',
     trending: false,
     in_stock: true,
-    stock_quantity: '',
-    images: [] as string[]
+    stock_quantity: ''
   });
 
   useEffect(() => {
@@ -81,6 +79,7 @@ const ProductManagement = () => {
   const filterProducts = () => {
     let filtered = products;
 
+    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(product =>
         product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -90,10 +89,12 @@ const ProductManagement = () => {
       );
     }
 
+    // Category filter
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(product => product.category === categoryFilter);
     }
 
+    // Stock filter
     if (stockFilter !== 'all') {
       switch (stockFilter) {
         case 'in_stock':
@@ -108,6 +109,7 @@ const ProductManagement = () => {
       }
     }
 
+    // Trending filter
     if (trendingFilter !== 'all') {
       filtered = filtered.filter(product => 
         trendingFilter === 'trending' ? product.trending : !product.trending
@@ -172,6 +174,34 @@ const ProductManagement = () => {
     }
   };
 
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        variant: "destructive",
+        title: "Upload Error",
+        description: "Failed to upload image"
+      });
+      return null;
+    }
+  };
+
   const loadProductDiscounts = async (productId: string) => {
     try {
       const { data, error } = await supabase
@@ -188,11 +218,13 @@ const ProductManagement = () => {
 
   const saveProductDiscounts = async (productId: string) => {
     try {
+      // First remove existing product discounts
       await supabase
         .from('product_discounts')
         .delete()
         .eq('product_id', productId);
 
+      // Then add new ones
       if (selectedDiscounts.length > 0) {
         const discountData = selectedDiscounts.map(discountId => ({
           product_id: productId,
@@ -216,16 +248,22 @@ const ProductManagement = () => {
     setLoading(true);
 
     try {
-      // Upload pending images if any (handled by MultipleImageUpload component)
-      const finalImages = formData.images;
-      
+      let imageUrl = editingProduct?.image_url || null;
+
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+        if (!imageUrl) {
+          setLoading(false);
+          return;
+        }
+      }
+
       const productData = {
         title: formData.title,
         description: formData.description,
         price: parseFloat(formData.price),
         category: formData.category,
-        images: finalImages,
-        image_url: finalImages.length > 0 ? finalImages[0] : null, // Set first image as main
+        image_url: imageUrl,
         daraz_link: formData.daraz_link || null,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
         trending: formData.trending,
@@ -264,7 +302,9 @@ const ProductManagement = () => {
         });
       }
 
+      // Save product discounts
       await saveProductDiscounts(productId);
+
       resetForm();
       loadProducts();
     } catch (error) {
@@ -290,8 +330,7 @@ const ProductManagement = () => {
       tags: product.tags?.join(', ') || '',
       trending: product.trending || false,
       in_stock: product.in_stock !== false,
-      stock_quantity: product.stock_quantity?.toString() || '',
-      images: product.images || []
+      stock_quantity: product.stock_quantity?.toString() || ''
     });
     await loadProductDiscounts(product.id);
     setShowAddForm(true);
@@ -333,11 +372,11 @@ const ProductManagement = () => {
       tags: '',
       trending: false,
       in_stock: true,
-      stock_quantity: '',
-      images: []
+      stock_quantity: ''
     });
     setEditingProduct(null);
     setShowAddForm(false);
+    setImageFile(null);
     setSelectedDiscounts([]);
   };
 
@@ -435,15 +474,17 @@ const ProductManagement = () => {
                     placeholder="Enter stock quantity"
                   />
                 </div>
-              </div>
 
-              {/* Multiple Image Upload */}
-              <MultipleImageUpload
-                images={formData.images}
-                onImagesChange={(images) => setFormData({...formData, images})}
-                maxImages={5}
-                disabled={loading}
-              />
+                <div className="space-y-2">
+                  <Label htmlFor="image">Product Image</Label>
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="daraz_link">Daraz Link (Optional)</Label>
@@ -561,7 +602,7 @@ const ProductManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Images</TableHead>
+                  <TableHead>Image</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
@@ -575,28 +616,13 @@ const ProductManagement = () => {
                 {filteredProducts.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
-                      <div className="flex gap-1">
-                        {product.images && product.images.length > 0 ? (
-                          <>
-                            <img 
-                              src={product.images[0]} 
-                              alt={product.title} 
-                              className="w-12 h-12 object-cover rounded" 
-                            />
-                            {product.images.length > 1 && (
-                              <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-xs">
-                                +{product.images.length - 1}
-                              </div>
-                            )}
-                          </>
-                        ) : product.image_url ? (
-                          <img src={product.image_url} alt={product.title} className="w-12 h-12 object-cover rounded" />
-                        ) : (
-                          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                            <Image className="h-6 w-6 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
+                      {product.image_url ? (
+                        <img src={product.image_url} alt={product.title} className="w-12 h-12 object-cover rounded" />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                          <Image className="h-6 w-6 text-gray-400" />
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="font-medium">{product.title}</TableCell>
                     <TableCell>{product.category}</TableCell>
